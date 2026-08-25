@@ -1,0 +1,26 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" UseMySettingsClassName="true">
+  <Profiles>
+    <Profile Name="(Default)" />
+  </Profiles>
+  <Settings>
+    <Setting Name="UltimaCartellaPDF" Type="System.String" Scope="User">
+      <Value Profile="(Default)">\\padaniafile.padania.local\piazza\Guardamiglio\11 - UFFICIO FORNITORI\FORNITORI\LISTINI E PROMO FORNITORI</Value>
+    </Setting>
+    <Setting Name="CartellaZip" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\appoggio\MD FATTURE\ZIP</Value>
+    </Setting>
+    <Setting Name="CartellaDecompressi" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\appoggio\MD FATTURE\P7M</Value>
+    </Setting>
+    <Setting Name="CartellaXmlPronti" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\appoggio\MD FATTURE\XML</Value>
+    </Setting>
+    <Setting Name="CartellaBackup" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\appoggio\MD FATTURE\BACKUPXML</Value>
+    </Setting>
+    <Setting Name="CartellaDoppi" Type="System.String" Scope="User">
+      <Value Profile="(Default)">C:\appoggio\MD FATTURE\XMLDOPPI</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
