@@ -2,6 +2,14 @@
 Partial Class frmPrezziFattureElettroniche
     Inherits System.Windows.Forms.Form
 
+    <System.Diagnostics.DebuggerNonUserCode()>
+    Public Sub New()
+        MyBase.New()
+
+        'Chiamata richiesta dal progettista.
+        InitializeComponent()
+    End Sub
+
     'Form esegue l'override del metodo Dispose per pulire l'elenco dei componenti.
     <System.Diagnostics.DebuggerNonUserCode()> _
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)

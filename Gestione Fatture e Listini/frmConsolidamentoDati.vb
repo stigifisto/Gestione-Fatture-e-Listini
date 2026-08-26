@@ -5,7 +5,11 @@ Public Class frmConsolidamentoDati
         dtpFattureAS400Dal.Value = Date.Today
     End Sub
 
-    Private Async Sub cmdImportaListini_ButtonClick(sender As Object, e As EventArgs) Handles cmdImportaListini.ButtonClick
+    Private Sub cmdImportaListini_Click(sender As Object, e As EventArgs) Handles cmdImportaListini.Click
+        cmsImportaListini.Show(cmdImportaListini, New Point(0, cmdImportaListini.Height))
+    End Sub
+
+    Private Async Sub mnuImportaEntrambi_Click(sender As Object, e As EventArgs) Handles mnuImportaEntrambi.Click
         Dim data As String = dtpListiniDal.Value.Date.ToString("dd/MM/yyyy")
         If MessageBox.Show($"Confermi l'importazione dei listini da AS400 e Infinity dalla data {data}?",
                            "Importa listini", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.No Then

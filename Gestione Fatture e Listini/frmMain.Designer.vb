@@ -2,6 +2,14 @@ Partial Class frmMain
     Inherits System.Windows.Forms.Form
 
     <System.Diagnostics.DebuggerNonUserCode()>
+    Public Sub New()
+        MyBase.New()
+
+        'Chiamata richiesta dal progettista.
+        InitializeComponent()
+    End Sub
+
+    <System.Diagnostics.DebuggerNonUserCode()>
     Protected Overrides Sub Dispose(ByVal disposing As Boolean)
         Try
             If disposing AndAlso components IsNot Nothing Then
