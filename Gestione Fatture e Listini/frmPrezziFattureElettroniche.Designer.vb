@@ -34,6 +34,8 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblDal = New System.Windows.Forms.Label()
         Me.cmbFornitori = New System.Windows.Forms.ComboBox()
         Me.lblFornitore = New System.Windows.Forms.Label()
+        Me.txtFiltroNumeroFattura = New System.Windows.Forms.TextBox()
+        Me.lblFiltroNumeroFattura = New System.Windows.Forms.Label()
         Me.dgvRisultati = New System.Windows.Forms.DataGridView()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.lblStatistiche = New System.Windows.Forms.ToolStripStatusLabel()
@@ -51,6 +53,8 @@ Partial Class frmPrezziFattureElettroniche
         Me.Panel1.Controls.Add(Me.lblDal)
         Me.Panel1.Controls.Add(Me.cmbFornitori)
         Me.Panel1.Controls.Add(Me.lblFornitore)
+        Me.Panel1.Controls.Add(Me.txtFiltroNumeroFattura)
+        Me.Panel1.Controls.Add(Me.lblFiltroNumeroFattura)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Top
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
@@ -119,6 +123,22 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblFornitore.TabIndex = 0
         Me.lblFornitore.Text = "FORNITORE"
         '
+        'txtFiltroNumeroFattura
+        '
+        Me.txtFiltroNumeroFattura.Location = New System.Drawing.Point(710, 25)
+        Me.txtFiltroNumeroFattura.Name = "txtFiltroNumeroFattura"
+        Me.txtFiltroNumeroFattura.Size = New System.Drawing.Size(175, 20)
+        Me.txtFiltroNumeroFattura.TabIndex = 7
+        '
+        'lblFiltroNumeroFattura
+        '
+        Me.lblFiltroNumeroFattura.AutoSize = True
+        Me.lblFiltroNumeroFattura.Location = New System.Drawing.Point(710, 9)
+        Me.lblFiltroNumeroFattura.Name = "lblFiltroNumeroFattura"
+        Me.lblFiltroNumeroFattura.Size = New System.Drawing.Size(93, 13)
+        Me.lblFiltroNumeroFattura.TabIndex = 8
+        Me.lblFiltroNumeroFattura.Text = "NUMERO FATTURA"
+        '
         'dgvRisultati
         '
         Me.dgvRisultati.AllowUserToAddRows = False
@@ -174,6 +194,8 @@ Partial Class frmPrezziFattureElettroniche
     Friend WithEvents lblDal As Label
     Friend WithEvents cmbFornitori As ComboBox
     Friend WithEvents lblFornitore As Label
+    Friend WithEvents txtFiltroNumeroFattura As TextBox
+    Friend WithEvents lblFiltroNumeroFattura As Label
     Friend WithEvents dgvRisultati As DataGridView
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents lblStatistiche As ToolStripStatusLabel

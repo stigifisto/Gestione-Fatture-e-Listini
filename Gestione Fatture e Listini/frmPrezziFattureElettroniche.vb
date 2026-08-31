@@ -2,6 +2,7 @@ Imports System.Data.SqlClient
 
 Public Class frmPrezziFattureElettroniche
     Dim connectionString As String = "Server=192.168.2.19\inalcasql12;Database=infinitydb;User ID=infinity_UTENTE;Password=antonio.speziali"
+    Private ReadOnly bindingRisultati As New BindingSource()
 
     ''' <summary>
     ''' Rappresenta una riga di Fatture_Sconti (sconto o maggiorazione) applicata a una linea fattura.
@@ -59,7 +60,9 @@ Public Class frmPrezziFattureElettroniche
 
         Try
             Dim dt As DataTable = Await Task.Run(Function() GetAnomaliePrezziFattureElettroniche(cedenteIdCodice, dal, al))
-            dgvRisultati.DataSource = dt
+            txtFiltroNumeroFattura.Clear()
+            bindingRisultati.DataSource = dt
+            dgvRisultati.DataSource = bindingRisultati
             FormattazioneEsteticaGriglia()
 
             Dim totale As Decimal = CalcolaTotaleAnomalie(dt)
@@ -70,6 +73,21 @@ Public Class frmPrezziFattureElettroniche
         Finally
             btnAnalizza.Enabled = True
         End Try
+    End Sub
+
+    ''' <summary>
+    ''' Filtra la griglia in tempo reale in base al numero fattura digitato (corrispondenza parziale).
+    ''' </summary>
+    Private Sub txtFiltroNumeroFattura_TextChanged(sender As Object, e As EventArgs) Handles txtFiltroNumeroFattura.TextChanged
+        If bindingRisultati.DataSource Is Nothing Then Return
+
+        Dim testo As String = txtFiltroNumeroFattura.Text.Trim()
+        If testo.Length = 0 Then
+            bindingRisultati.RemoveFilter()
+        Else
+            Dim valoreEscaped As String = testo.Replace("'", "''")
+            bindingRisultati.Filter = $"NumeroFattura LIKE '%{valoreEscaped}%'"
+        End If
     End Sub
 
     ''' <summary>
