@@ -145,7 +145,6 @@
     <Compile Include="frmMain.Designer.vb">
       <DependentUpon>frmMain.vb</DependentUpon>
     </Compile>
-    <Compile Include="IconeHub.vb" />
     <Compile Include="ModuloImportListiniInfinity.vb" />
     <Compile Include="ModuloImportFattureXml.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
@@ -190,6 +189,11 @@
     </None>
     <None Include="App.config" />
     <None Include="packages.config" />
+    <None Include="Resources\CaricamentoListini.png" />
+    <None Include="Resources\ConsolidamentoDati.png" />
+    <None Include="Resources\FattureElettroniche.png" />
+    <None Include="Resources\AnalisiPrezzi.png" />
+    <None Include="Resources\Impostazioni.png" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="estrai_data_listino.exe">

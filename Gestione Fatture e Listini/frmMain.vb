@@ -8,11 +8,11 @@ Public Class frmMain
 
     Private Sub frmMain_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         Dim riquadri As (Titolo As String, Icona As Bitmap, Azione As Action)() = {
-            ("CARICAMENTO LISTINI FORNITORI", IconeHub.CreaIconaListini(), AddressOf ApriCaricamentoListini),
-            ("CONSOLIDAMENTO DATI", IconeHub.CreaIconaConsolidamento(), AddressOf ApriConsolidamentoDati),
-            ("IMPORTAZIONE FATTURE ELETTRONICHE", IconeHub.CreaIconaFattureElettroniche(), AddressOf ApriImportFattureElettroniche),
-            ("ANALISI PREZZI FATTURE", IconeHub.CreaIconaAnalisiPrezzi(), AddressOf ApriAnalisiPrezziFatture),
-            ("IMPOSTAZIONI", IconeHub.CreaIconaImpostazioni(), AddressOf ApriImpostazioni)
+            ("CARICAMENTO LISTINI FORNITORI", My.Resources.CaricamentoListini, AddressOf ApriCaricamentoListini),
+            ("CONSOLIDAMENTO DATI", My.Resources.ConsolidamentoDati, AddressOf ApriConsolidamentoDati),
+            ("IMPORTAZIONE FATTURE ELETTRONICHE", My.Resources.FattureElettroniche, AddressOf ApriImportFattureElettroniche),
+            ("ANALISI PREZZI FATTURE", My.Resources.AnalisiPrezzi, AddressOf ApriAnalisiPrezziFatture),
+            ("IMPOSTAZIONI", My.Resources.Impostazioni, AddressOf ApriImpostazioni)
         }
 
         Dim larghezzaTotale As Integer = riquadri.Length * LarghezzaRiquadro + (riquadri.Length + 1) * Margine
@@ -37,7 +37,7 @@ Public Class frmMain
         Dim pic As New PictureBox() With {
             .Dock = DockStyle.Top,
             .Height = 130,
-            .SizeMode = PictureBoxSizeMode.CenterImage,
+            .SizeMode = PictureBoxSizeMode.Zoom,
             .Image = icona,
             .Cursor = Cursors.Hand
         }
