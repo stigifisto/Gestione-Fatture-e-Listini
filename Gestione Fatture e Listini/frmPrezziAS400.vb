@@ -126,6 +126,7 @@ Public Class frmPrezziAS400
                 CASE
                     WHEN lst.PrezzoNettoCalcolato IS NULL THEN 'Mancante a Listino'
                     WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) > @scostamento THEN 'Prezzo Eccessivo'
+                    WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) < 0 THEN 'Prezzo Inferiore'
                     ELSE 'In Bolla'
                 END AS Stato_Anomalia
             FROM Fatture_AS400 f
@@ -180,6 +181,9 @@ Public Class frmPrezziAS400
                 row.DefaultCellStyle.BackColor = Color.LemonChiffon
             ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > My.Settings.ScostamentoAccettabile Then
                 row.DefaultCellStyle.ForeColor = Color.Red
+                row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
+            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) < 0D Then
+                row.DefaultCellStyle.ForeColor = Color.Blue
                 row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
             End If
         Next

@@ -99,7 +99,9 @@ Module ModuloStampaAnomalie
 
                     Dim row As DataGridViewRow = righeStampa(indiceRiga)
                     Dim stato As String = If(row.Cells(NomeColonnaStato).Value Is Nothing, "", row.Cells(NomeColonnaStato).Value.ToString())
-                    Dim fontRiga As Font = If(String.Equals(stato, "Prezzo Eccessivo", StringComparison.OrdinalIgnoreCase), fontCellaEvidenziata, fontCella)
+                    Dim daEvidenziare As Boolean = String.Equals(stato, "Prezzo Eccessivo", StringComparison.OrdinalIgnoreCase) OrElse
+                                                    String.Equals(stato, "Prezzo Inferiore", StringComparison.OrdinalIgnoreCase)
+                    Dim fontRiga As Font = If(daEvidenziare, fontCellaEvidenziata, fontCella)
 
                     xCorrente = x
                     For i As Integer = 0 To colonneVisibili.Count - 1

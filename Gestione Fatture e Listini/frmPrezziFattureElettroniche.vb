@@ -257,7 +257,8 @@ Public Class frmPrezziFattureElettroniche
 
                 row("Differenza_Unitaria") = differenzaUnitaria
                 row("Differenza_Totale_Riga") = differenzaUnitaria * quantita
-                row("Stato_Anomalia") = If(differenzaUnitaria > My.Settings.ScostamentoAccettabile, "Prezzo Eccessivo", "In Bolla")
+                row("Stato_Anomalia") = If(differenzaUnitaria > My.Settings.ScostamentoAccettabile, "Prezzo Eccessivo",
+                                          If(differenzaUnitaria < 0D, "Prezzo Inferiore", "In Bolla"))
             End If
         Next
     End Sub
@@ -294,6 +295,9 @@ Public Class frmPrezziFattureElettroniche
                 row.DefaultCellStyle.BackColor = Color.LemonChiffon
             ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > My.Settings.ScostamentoAccettabile Then
                 row.DefaultCellStyle.ForeColor = Color.Red
+                row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
+            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) < 0D Then
+                row.DefaultCellStyle.ForeColor = Color.Blue
                 row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
             End If
         Next
