@@ -7,6 +7,8 @@ Public Class frmImpostazioni
         txtCartellaBackup.Text = My.Settings.CartellaBackup
         txtCartellaDoppi.Text = My.Settings.CartellaDoppi
         nudScostamento.Value = My.Settings.ScostamentoAccettabile
+        nudGiorniListini.Value = My.Settings.GiorniImportazioneListini
+        nudGiorniFattureAS400.Value = My.Settings.GiorniImportazioneFattureAS400
     End Sub
 
     Private Sub Sfoglia(txt As TextBox)
@@ -54,6 +56,8 @@ Public Class frmImpostazioni
         My.Settings.CartellaBackup = txtCartellaBackup.Text.Trim()
         My.Settings.CartellaDoppi = txtCartellaDoppi.Text.Trim()
         My.Settings.ScostamentoAccettabile = nudScostamento.Value
+        My.Settings.GiorniImportazioneListini = CInt(nudGiorniListini.Value)
+        My.Settings.GiorniImportazioneFattureAS400 = CInt(nudGiorniFattureAS400.Value)
         My.Settings.Save()
 
         Me.DialogResult = DialogResult.OK

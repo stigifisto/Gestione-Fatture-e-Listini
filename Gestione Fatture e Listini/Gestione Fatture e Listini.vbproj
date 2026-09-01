@@ -148,6 +148,7 @@
     <Compile Include="ModuloImportListiniInfinity.vb" />
     <Compile Include="ModuloImportFattureXml.vb" />
     <Compile Include="ModuloStampaAnomalie.vb" />
+    <Compile Include="My Project\ApplicationEvents.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">
       <AutoGen>True</AutoGen>

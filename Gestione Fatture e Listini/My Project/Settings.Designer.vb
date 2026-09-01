@@ -121,6 +121,30 @@ Namespace My
             End Set
         End Property
 
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("90")> _
+        Public Property GiorniImportazioneListini() As Integer
+            Get
+                Return CType(Me("GiorniImportazioneListini"), Integer)
+            End Get
+            Set
+                Me("GiorniImportazioneListini") = value
+            End Set
+        End Property
+
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("90")> _
+        Public Property GiorniImportazioneFattureAS400() As Integer
+            Get
+                Return CType(Me("GiorniImportazioneFattureAS400"), Integer)
+            End Get
+            Set
+                Me("GiorniImportazioneFattureAS400") = value
+            End Set
+        End Property
+
         Public Shared ReadOnly Property [Default]() As MySettings
             Get
 

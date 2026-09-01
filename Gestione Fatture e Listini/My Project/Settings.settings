@@ -25,5 +25,11 @@
     <Setting Name="ScostamentoAccettabile" Type="System.Decimal" Scope="User">
       <Value Profile="(Default)">0.02</Value>
     </Setting>
+    <Setting Name="GiorniImportazioneListini" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">90</Value>
+    </Setting>
+    <Setting Name="GiorniImportazioneFattureAS400" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">90</Value>
+    </Setting>
   </Settings>
 </SettingsFile>
