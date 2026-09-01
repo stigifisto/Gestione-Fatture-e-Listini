@@ -90,6 +90,13 @@ Public Class frmPrezziFattureElettroniche
         End If
     End Sub
 
+    Private Sub btnStampa_Click(sender As Object, e As EventArgs) Handles btnStampa.Click
+        Dim fornitore As String = If(cmbFornitori.SelectedIndex >= 0, cmbFornitori.Text, "")
+        Dim sottotitolo As String = $"Fornitore: {fornitore} — Fatture dal {dtpDal.Value.Date:dd/MM/yyyy} al {dtpAl.Value.Date:dd/MM/yyyy} — Stampato il {DateTime.Now:dd/MM/yyyy HH:mm}"
+
+        ModuloStampaAnomalie.StampaAnomalieGriglia(dgvRisultati, "Analisi prezzi fatture elettroniche vs listino Infinity — Anomalie", sottotitolo)
+    End Sub
+
     ''' <summary>
     ''' Confronta, per il cedente/fornitore e il range di data fattura indicati, il prezzo unitario
     ''' fatturato (Fatture_Righe.PrezzoUnitario), al netto degli sconti/maggiorazioni di riga
@@ -250,7 +257,7 @@ Public Class frmPrezziFattureElettroniche
 
                 row("Differenza_Unitaria") = differenzaUnitaria
                 row("Differenza_Totale_Riga") = differenzaUnitaria * quantita
-                row("Stato_Anomalia") = If(differenzaUnitaria > 0.02D, "Prezzo Eccessivo", "In Bolla")
+                row("Stato_Anomalia") = If(differenzaUnitaria > My.Settings.ScostamentoAccettabile, "Prezzo Eccessivo", "In Bolla")
             End If
         Next
     End Sub
@@ -285,7 +292,7 @@ Public Class frmPrezziFattureElettroniche
         For Each row As DataGridViewRow In dgvRisultati.Rows
             If IsDBNull(row.Cells("Unitario_Netto_Listino").Value) Then
                 row.DefaultCellStyle.BackColor = Color.LemonChiffon
-            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > 0.02 Then
+            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > My.Settings.ScostamentoAccettabile Then
                 row.DefaultCellStyle.ForeColor = Color.Red
                 row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
             End If

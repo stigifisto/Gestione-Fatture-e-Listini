@@ -2,6 +2,7 @@ Imports System.Data.SqlClient
 
 Public Class frmPrezziAS400
     Dim connectionString As String = "Server=192.168.2.19\inalcasql12;Database=infinitydb;User ID=infinity_UTENTE;Password=antonio.speziali"
+    Private ReadOnly bindingRisultati As New BindingSource()
 
     Private Sub frmPrezziAS400_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         dtpDal.Value = DateTime.Now.AddMonths(-1)
@@ -52,7 +53,9 @@ Public Class frmPrezziAS400
 
         Try
             Dim dt As DataTable = Await Task.Run(Function() GetAnomaliePrezziAS400(codiceFornitore, dal, al, usaListinoInfinity))
-            dgvRisultati.DataSource = dt
+            txtFiltroNumeroFattura.Clear()
+            bindingRisultati.DataSource = dt
+            dgvRisultati.DataSource = bindingRisultati
             FormattazioneEsteticaGriglia()
 
             Dim totale As Decimal = CalcolaTotaleAnomalie(dt)
@@ -63,6 +66,29 @@ Public Class frmPrezziAS400
         Finally
             btnAnalizza.Enabled = True
         End Try
+    End Sub
+
+    ''' <summary>
+    ''' Filtra la griglia in tempo reale in base al numero fattura digitato (corrispondenza parziale).
+    ''' </summary>
+    Private Sub txtFiltroNumeroFattura_TextChanged(sender As Object, e As EventArgs) Handles txtFiltroNumeroFattura.TextChanged
+        If bindingRisultati.DataSource Is Nothing Then Return
+
+        Dim testo As String = txtFiltroNumeroFattura.Text.Trim()
+        If testo.Length = 0 Then
+            bindingRisultati.RemoveFilter()
+        Else
+            Dim valoreEscaped As String = testo.Replace("'", "''")
+            bindingRisultati.Filter = $"CONVERT(NumeroFattura, 'System.String') LIKE '%{valoreEscaped}%'"
+        End If
+    End Sub
+
+    Private Sub btnStampa_Click(sender As Object, e As EventArgs) Handles btnStampa.Click
+        Dim fornitore As String = If(cmbFornitori.SelectedIndex >= 0, cmbFornitori.Text, "")
+        Dim listino As String = If(rdoListinoInfinity.Checked, "Infinity", "AS400")
+        Dim sottotitolo As String = $"Fornitore: {fornitore} — Bolle dal {dtpDal.Value.Date:dd/MM/yyyy} al {dtpAl.Value.Date:dd/MM/yyyy} — Listino: {listino} — Stampato il {DateTime.Now:dd/MM/yyyy HH:mm}"
+
+        ModuloStampaAnomalie.StampaAnomalieGriglia(dgvRisultati, "Analisi prezzi fatture AS400 vs listino — Anomalie", sottotitolo)
     End Sub
 
     ''' <summary>
@@ -99,7 +125,7 @@ Public Class frmPrezziAS400
                 ((f.MOAPRZ - lst.PrezzoNettoCalcolato) * f.MOAQTA) AS Differenza_Totale_Riga,
                 CASE
                     WHEN lst.PrezzoNettoCalcolato IS NULL THEN 'Mancante a Listino'
-                    WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) > 0.02 THEN 'Prezzo Eccessivo'
+                    WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) > @scostamento THEN 'Prezzo Eccessivo'
                     ELSE 'In Bolla'
                 END AS Stato_Anomalia
             FROM Fatture_AS400 f
@@ -132,6 +158,7 @@ Public Class frmPrezziAS400
             cmd.Parameters.AddWithValue("@fornitore", codiceFornitore)
             cmd.Parameters.AddWithValue("@dal", dal)
             cmd.Parameters.AddWithValue("@al", al)
+            cmd.Parameters.AddWithValue("@scostamento", My.Settings.ScostamentoAccettabile)
 
             Dim da As New SqlDataAdapter(cmd)
             da.Fill(dt)
@@ -151,7 +178,7 @@ Public Class frmPrezziAS400
         For Each row As DataGridViewRow In dgvRisultati.Rows
             If IsDBNull(row.Cells("Unitario_Netto_Listino").Value) Then
                 row.DefaultCellStyle.BackColor = Color.LemonChiffon
-            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > 0.02 Then
+            ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > My.Settings.ScostamentoAccettabile Then
                 row.DefaultCellStyle.ForeColor = Color.Red
                 row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)
             End If

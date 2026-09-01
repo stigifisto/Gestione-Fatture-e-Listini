@@ -6,6 +6,7 @@ Public Class frmImpostazioni
         txtCartellaXmlPronti.Text = My.Settings.CartellaXmlPronti
         txtCartellaBackup.Text = My.Settings.CartellaBackup
         txtCartellaDoppi.Text = My.Settings.CartellaDoppi
+        nudScostamento.Value = My.Settings.ScostamentoAccettabile
     End Sub
 
     Private Sub Sfoglia(txt As TextBox)
@@ -52,6 +53,7 @@ Public Class frmImpostazioni
         My.Settings.CartellaXmlPronti = txtCartellaXmlPronti.Text.Trim()
         My.Settings.CartellaBackup = txtCartellaBackup.Text.Trim()
         My.Settings.CartellaDoppi = txtCartellaDoppi.Text.Trim()
+        My.Settings.ScostamentoAccettabile = nudScostamento.Value
         My.Settings.Save()
 
         Me.DialogResult = DialogResult.OK

@@ -109,6 +109,18 @@ Namespace My
             End Set
         End Property
 
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("0.02")> _
+        Public Property ScostamentoAccettabile() As Decimal
+            Get
+                Return CType(Me("ScostamentoAccettabile"), Decimal)
+            End Get
+            Set
+                Me("ScostamentoAccettabile") = value
+            End Set
+        End Property
+
         Public Shared ReadOnly Property [Default]() As MySettings
             Get
 

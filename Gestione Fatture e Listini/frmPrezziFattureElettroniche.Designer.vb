@@ -36,6 +36,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblFornitore = New System.Windows.Forms.Label()
         Me.txtFiltroNumeroFattura = New System.Windows.Forms.TextBox()
         Me.lblFiltroNumeroFattura = New System.Windows.Forms.Label()
+        Me.btnStampa = New System.Windows.Forms.Button()
         Me.dgvRisultati = New System.Windows.Forms.DataGridView()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.lblStatistiche = New System.Windows.Forms.ToolStripStatusLabel()
@@ -55,10 +56,11 @@ Partial Class frmPrezziFattureElettroniche
         Me.Panel1.Controls.Add(Me.lblFornitore)
         Me.Panel1.Controls.Add(Me.txtFiltroNumeroFattura)
         Me.Panel1.Controls.Add(Me.lblFiltroNumeroFattura)
+        Me.Panel1.Controls.Add(Me.btnStampa)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Top
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(900, 62)
+        Me.Panel1.Size = New System.Drawing.Size(900, 100)
         Me.Panel1.TabIndex = 0
         '
         'btnAnalizza
@@ -139,15 +141,24 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblFiltroNumeroFattura.TabIndex = 8
         Me.lblFiltroNumeroFattura.Text = "NUMERO FATTURA"
         '
+        'btnStampa
+        '
+        Me.btnStampa.Location = New System.Drawing.Point(575, 68)
+        Me.btnStampa.Name = "btnStampa"
+        Me.btnStampa.Size = New System.Drawing.Size(120, 26)
+        Me.btnStampa.TabIndex = 9
+        Me.btnStampa.Text = "STAMPA"
+        Me.btnStampa.UseVisualStyleBackColor = True
+        '
         'dgvRisultati
         '
         Me.dgvRisultati.AllowUserToAddRows = False
         Me.dgvRisultati.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvRisultati.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvRisultati.Location = New System.Drawing.Point(0, 62)
+        Me.dgvRisultati.Location = New System.Drawing.Point(0, 100)
         Me.dgvRisultati.Name = "dgvRisultati"
         Me.dgvRisultati.ReadOnly = True
-        Me.dgvRisultati.Size = New System.Drawing.Size(900, 460)
+        Me.dgvRisultati.Size = New System.Drawing.Size(900, 422)
         Me.dgvRisultati.TabIndex = 1
         '
         'StatusStrip1
@@ -196,6 +207,7 @@ Partial Class frmPrezziFattureElettroniche
     Friend WithEvents lblFornitore As Label
     Friend WithEvents txtFiltroNumeroFattura As TextBox
     Friend WithEvents lblFiltroNumeroFattura As Label
+    Friend WithEvents btnStampa As Button
     Friend WithEvents dgvRisultati As DataGridView
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents lblStatistiche As ToolStripStatusLabel

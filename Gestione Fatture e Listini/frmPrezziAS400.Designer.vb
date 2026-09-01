@@ -37,6 +37,9 @@ Partial Class frmPrezziAS400
         Me.lblDal = New System.Windows.Forms.Label()
         Me.cmbFornitori = New System.Windows.Forms.ComboBox()
         Me.lblFornitore = New System.Windows.Forms.Label()
+        Me.txtFiltroNumeroFattura = New System.Windows.Forms.TextBox()
+        Me.lblFiltroNumeroFattura = New System.Windows.Forms.Label()
+        Me.btnStampa = New System.Windows.Forms.Button()
         Me.dgvRisultati = New System.Windows.Forms.DataGridView()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.lblStatistiche = New System.Windows.Forms.ToolStripStatusLabel()
@@ -57,10 +60,13 @@ Partial Class frmPrezziAS400
         Me.Panel1.Controls.Add(Me.lblDal)
         Me.Panel1.Controls.Add(Me.cmbFornitori)
         Me.Panel1.Controls.Add(Me.lblFornitore)
+        Me.Panel1.Controls.Add(Me.txtFiltroNumeroFattura)
+        Me.Panel1.Controls.Add(Me.lblFiltroNumeroFattura)
+        Me.Panel1.Controls.Add(Me.btnStampa)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Top
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(900, 62)
+        Me.Panel1.Size = New System.Drawing.Size(900, 118)
         Me.Panel1.TabIndex = 0
         '
         'lblListino
@@ -157,15 +163,40 @@ Partial Class frmPrezziAS400
         Me.lblFornitore.TabIndex = 0
         Me.lblFornitore.Text = "FORNITORE"
         '
+        'txtFiltroNumeroFattura
+        '
+        Me.txtFiltroNumeroFattura.Location = New System.Drawing.Point(15, 84)
+        Me.txtFiltroNumeroFattura.Name = "txtFiltroNumeroFattura"
+        Me.txtFiltroNumeroFattura.Size = New System.Drawing.Size(280, 20)
+        Me.txtFiltroNumeroFattura.TabIndex = 10
+        '
+        'lblFiltroNumeroFattura
+        '
+        Me.lblFiltroNumeroFattura.AutoSize = True
+        Me.lblFiltroNumeroFattura.Location = New System.Drawing.Point(15, 68)
+        Me.lblFiltroNumeroFattura.Name = "lblFiltroNumeroFattura"
+        Me.lblFiltroNumeroFattura.Size = New System.Drawing.Size(93, 13)
+        Me.lblFiltroNumeroFattura.TabIndex = 11
+        Me.lblFiltroNumeroFattura.Text = "NUMERO FATTURA"
+        '
+        'btnStampa
+        '
+        Me.btnStampa.Location = New System.Drawing.Point(600, 86)
+        Me.btnStampa.Name = "btnStampa"
+        Me.btnStampa.Size = New System.Drawing.Size(120, 26)
+        Me.btnStampa.TabIndex = 12
+        Me.btnStampa.Text = "STAMPA"
+        Me.btnStampa.UseVisualStyleBackColor = True
+        '
         'dgvRisultati
         '
         Me.dgvRisultati.AllowUserToAddRows = False
         Me.dgvRisultati.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvRisultati.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvRisultati.Location = New System.Drawing.Point(0, 62)
+        Me.dgvRisultati.Location = New System.Drawing.Point(0, 118)
         Me.dgvRisultati.Name = "dgvRisultati"
         Me.dgvRisultati.ReadOnly = True
-        Me.dgvRisultati.Size = New System.Drawing.Size(900, 460)
+        Me.dgvRisultati.Size = New System.Drawing.Size(900, 404)
         Me.dgvRisultati.TabIndex = 1
         '
         'StatusStrip1
@@ -215,6 +246,9 @@ Partial Class frmPrezziAS400
     Friend WithEvents lblDal As Label
     Friend WithEvents cmbFornitori As ComboBox
     Friend WithEvents lblFornitore As Label
+    Friend WithEvents txtFiltroNumeroFattura As TextBox
+    Friend WithEvents lblFiltroNumeroFattura As Label
+    Friend WithEvents btnStampa As Button
     Friend WithEvents dgvRisultati As DataGridView
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents lblStatistiche As ToolStripStatusLabel

@@ -41,8 +41,11 @@ Partial Class frmImpostazioni
         Me.lblDoppi = New System.Windows.Forms.Label()
         Me.txtCartellaDoppi = New System.Windows.Forms.TextBox()
         Me.btnSfogliaDoppi = New System.Windows.Forms.Button()
+        Me.lblScostamento = New System.Windows.Forms.Label()
+        Me.nudScostamento = New System.Windows.Forms.NumericUpDown()
         Me.btnSalva = New System.Windows.Forms.Button()
         Me.btnAnnulla = New System.Windows.Forms.Button()
+        CType(Me.nudScostamento, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'lblZip
@@ -170,21 +173,40 @@ Partial Class frmImpostazioni
         Me.btnSfogliaDoppi.Text = "Sfoglia..."
         Me.btnSfogliaDoppi.UseVisualStyleBackColor = True
         '
+        'lblScostamento
+        '
+        Me.lblScostamento.AutoSize = True
+        Me.lblScostamento.Location = New System.Drawing.Point(12, 260)
+        Me.lblScostamento.Name = "lblScostamento"
+        Me.lblScostamento.Size = New System.Drawing.Size(432, 13)
+        Me.lblScostamento.TabIndex = 15
+        Me.lblScostamento.Text = "Scostamento di prezzo accettabile (€) oltre il quale segnalare l'anomalia:"
+        '
+        'nudScostamento
+        '
+        Me.nudScostamento.DecimalPlaces = 2
+        Me.nudScostamento.Increment = New Decimal(New Integer() {1, 0, 0, 131072})
+        Me.nudScostamento.Location = New System.Drawing.Point(15, 276)
+        Me.nudScostamento.Maximum = New Decimal(New Integer() {9999, 0, 0, 0})
+        Me.nudScostamento.Name = "nudScostamento"
+        Me.nudScostamento.Size = New System.Drawing.Size(120, 20)
+        Me.nudScostamento.TabIndex = 16
+        '
         'btnSalva
         '
-        Me.btnSalva.Location = New System.Drawing.Point(420, 264)
+        Me.btnSalva.Location = New System.Drawing.Point(420, 313)
         Me.btnSalva.Name = "btnSalva"
         Me.btnSalva.Size = New System.Drawing.Size(75, 30)
-        Me.btnSalva.TabIndex = 15
+        Me.btnSalva.TabIndex = 17
         Me.btnSalva.Text = "Salva"
         Me.btnSalva.UseVisualStyleBackColor = True
         '
         'btnAnnulla
         '
-        Me.btnAnnulla.Location = New System.Drawing.Point(501, 264)
+        Me.btnAnnulla.Location = New System.Drawing.Point(501, 313)
         Me.btnAnnulla.Name = "btnAnnulla"
         Me.btnAnnulla.Size = New System.Drawing.Size(75, 30)
-        Me.btnAnnulla.TabIndex = 16
+        Me.btnAnnulla.TabIndex = 18
         Me.btnAnnulla.Text = "Annulla"
         Me.btnAnnulla.UseVisualStyleBackColor = True
         '
@@ -194,7 +216,7 @@ Partial Class frmImpostazioni
         Me.CancelButton = Me.btnAnnulla
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(588, 306)
+        Me.ClientSize = New System.Drawing.Size(588, 355)
         Me.Controls.Add(Me.lblZip)
         Me.Controls.Add(Me.txtCartellaZip)
         Me.Controls.Add(Me.btnSfogliaZip)
@@ -210,6 +232,8 @@ Partial Class frmImpostazioni
         Me.Controls.Add(Me.lblDoppi)
         Me.Controls.Add(Me.txtCartellaDoppi)
         Me.Controls.Add(Me.btnSfogliaDoppi)
+        Me.Controls.Add(Me.lblScostamento)
+        Me.Controls.Add(Me.nudScostamento)
         Me.Controls.Add(Me.btnSalva)
         Me.Controls.Add(Me.btnAnnulla)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -218,6 +242,7 @@ Partial Class frmImpostazioni
         Me.Name = "frmImpostazioni"
         Me.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent
         Me.Text = "Impostazioni cartelle"
+        CType(Me.nudScostamento, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -238,6 +263,8 @@ Partial Class frmImpostazioni
     Friend WithEvents lblDoppi As Label
     Friend WithEvents txtCartellaDoppi As TextBox
     Friend WithEvents btnSfogliaDoppi As Button
+    Friend WithEvents lblScostamento As Label
+    Friend WithEvents nudScostamento As NumericUpDown
     Friend WithEvents btnSalva As Button
     Friend WithEvents btnAnnulla As Button
 End Class
