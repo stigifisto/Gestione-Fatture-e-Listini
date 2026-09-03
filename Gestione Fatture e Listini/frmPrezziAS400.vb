@@ -91,6 +91,14 @@ Public Class frmPrezziAS400
         ModuloStampaAnomalie.StampaAnomalieGriglia(dgvRisultati, "Analisi prezzi fatture AS400 vs listino — Anomalie", sottotitolo)
     End Sub
 
+    Private Sub btnEsportaExcel_Click(sender As Object, e As EventArgs) Handles btnEsportaExcel.Click
+        Dim fornitore As String = If(cmbFornitori.SelectedIndex >= 0, cmbFornitori.Text, "")
+        Dim listino As String = If(rdoListinoInfinity.Checked, "Infinity", "AS400")
+        Dim sottotitolo As String = $"Fornitore: {fornitore} — Bolle dal {dtpDal.Value.Date:dd/MM/yyyy} al {dtpAl.Value.Date:dd/MM/yyyy} — Listino: {listino} — Esportato il {DateTime.Now:dd/MM/yyyy HH:mm}"
+
+        ModuloEsportaAnomalie.EsportaAnomalieExcel(dgvRisultati, "Analisi prezzi fatture AS400 vs listino — Anomalie", sottotitolo)
+    End Sub
+
     ''' <summary>
     ''' Confronta, per il fornitore e il range di data bolla indicati, il prezzo fatturato
     ''' (Fatture_AS400.MOAPRZ) con il prezzo netto di listino (PrezzoNettoCalcolato), preso a
@@ -124,6 +132,9 @@ Public Class frmPrezziAS400
                 (f.MOAPRZ - lst.PrezzoNettoCalcolato) AS Differenza_Unitaria,
                 ((f.MOAPRZ - lst.PrezzoNettoCalcolato) * f.MOAQTA) AS Differenza_Totale_Riga,
                 CASE
+                    -- Righe puramente descrittive (es. riferimento DDT), senza un vero codice
+                    -- articolo: non hanno un listino da confrontare, quindi non sono un'anomalia.
+                    WHEN lst.PrezzoNettoCalcolato IS NULL AND (LTRIM(RTRIM(ISNULL(f.MOACOD, ''))) = '' OR LTRIM(RTRIM(f.MOACOD)) = '0') THEN 'In Bolla'
                     WHEN lst.PrezzoNettoCalcolato IS NULL THEN 'Mancante a Listino'
                     WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) > @scostamento THEN 'Prezzo Eccessivo'
                     WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) < 0 THEN 'Prezzo Inferiore'
@@ -178,7 +189,11 @@ Public Class frmPrezziAS400
 
         For Each row As DataGridViewRow In dgvRisultati.Rows
             If IsDBNull(row.Cells("Unitario_Netto_Listino").Value) Then
-                row.DefaultCellStyle.BackColor = Color.LemonChiffon
+                Dim stato As String = If(row.Cells("Stato_Anomalia").Value Is Nothing, "", row.Cells("Stato_Anomalia").Value.ToString())
+                If stato = "Mancante a Listino" Then
+                    row.DefaultCellStyle.BackColor = Color.LemonChiffon
+                End If
+                ' Righe "In Bolla" senza un vero codice articolo (es. riferimento DDT): nessuna evidenziazione.
             ElseIf Convert.ToDecimal(row.Cells("Differenza_Totale_Riga").Value) > My.Settings.ScostamentoAccettabile Then
                 row.DefaultCellStyle.ForeColor = Color.Red
                 row.Cells("Differenza_Totale_Riga").Style.Font = New Font(dgvRisultati.Font, FontStyle.Bold)

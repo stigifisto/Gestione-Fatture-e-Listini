@@ -37,6 +37,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.txtFiltroNumeroFattura = New System.Windows.Forms.TextBox()
         Me.lblFiltroNumeroFattura = New System.Windows.Forms.Label()
         Me.btnStampa = New System.Windows.Forms.Button()
+        Me.btnEsportaExcel = New System.Windows.Forms.Button()
         Me.dgvRisultati = New System.Windows.Forms.DataGridView()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.lblStatistiche = New System.Windows.Forms.ToolStripStatusLabel()
@@ -57,6 +58,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.Panel1.Controls.Add(Me.txtFiltroNumeroFattura)
         Me.Panel1.Controls.Add(Me.lblFiltroNumeroFattura)
         Me.Panel1.Controls.Add(Me.btnStampa)
+        Me.Panel1.Controls.Add(Me.btnEsportaExcel)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Top
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
@@ -150,6 +152,15 @@ Partial Class frmPrezziFattureElettroniche
         Me.btnStampa.Text = "STAMPA"
         Me.btnStampa.UseVisualStyleBackColor = True
         '
+        'btnEsportaExcel
+        '
+        Me.btnEsportaExcel.Location = New System.Drawing.Point(710, 68)
+        Me.btnEsportaExcel.Name = "btnEsportaExcel"
+        Me.btnEsportaExcel.Size = New System.Drawing.Size(120, 26)
+        Me.btnEsportaExcel.TabIndex = 10
+        Me.btnEsportaExcel.Text = "ESPORTA EXCEL"
+        Me.btnEsportaExcel.UseVisualStyleBackColor = True
+        '
         'dgvRisultati
         '
         Me.dgvRisultati.AllowUserToAddRows = False
@@ -208,6 +219,7 @@ Partial Class frmPrezziFattureElettroniche
     Friend WithEvents txtFiltroNumeroFattura As TextBox
     Friend WithEvents lblFiltroNumeroFattura As Label
     Friend WithEvents btnStampa As Button
+    Friend WithEvents btnEsportaExcel As Button
     Friend WithEvents dgvRisultati As DataGridView
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents lblStatistiche As ToolStripStatusLabel
