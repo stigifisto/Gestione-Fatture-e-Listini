@@ -31,5 +31,14 @@
     <Setting Name="GiorniImportazioneFattureAS400" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">90</Value>
     </Setting>
+    <Setting Name="CartellaXmlRichiestaMassiva" Type="System.String" Scope="User">
+      <Value Profile="(Default)"></Value>
+    </Setting>
+    <Setting Name="UltimaDataDaRichiestaMassiva" Type="System.String" Scope="User">
+      <Value Profile="(Default)"></Value>
+    </Setting>
+    <Setting Name="UltimaDataARichiestaMassiva" Type="System.String" Scope="User">
+      <Value Profile="(Default)"></Value>
+    </Setting>
   </Settings>
 </SettingsFile>

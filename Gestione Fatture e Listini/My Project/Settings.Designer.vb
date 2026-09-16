@@ -145,6 +145,42 @@ Namespace My
             End Set
         End Property
 
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("")> _
+        Public Property CartellaXmlRichiestaMassiva() As String
+            Get
+                Return CType(Me("CartellaXmlRichiestaMassiva"), String)
+            End Get
+            Set
+                Me("CartellaXmlRichiestaMassiva") = value
+            End Set
+        End Property
+
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("")> _
+        Public Property UltimaDataDaRichiestaMassiva() As String
+            Get
+                Return CType(Me("UltimaDataDaRichiestaMassiva"), String)
+            End Get
+            Set
+                Me("UltimaDataDaRichiestaMassiva") = value
+            End Set
+        End Property
+
+        <Global.System.Configuration.UserScopedSettingAttribute(), _
+         Global.System.Diagnostics.DebuggerNonUserCodeAttribute(), _
+         Global.System.Configuration.DefaultSettingValueAttribute("")> _
+        Public Property UltimaDataARichiestaMassiva() As String
+            Get
+                Return CType(Me("UltimaDataARichiestaMassiva"), String)
+            End Get
+            Set
+                Me("UltimaDataARichiestaMassiva") = value
+            End Set
+        End Property
+
         Public Shared ReadOnly Property [Default]() As MySettings
             Get
 

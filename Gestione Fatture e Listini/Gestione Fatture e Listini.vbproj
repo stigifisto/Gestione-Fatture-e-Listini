@@ -121,6 +121,12 @@
     <Compile Include="frmImpostazioni.Designer.vb">
       <DependentUpon>frmImpostazioni.vb</DependentUpon>
     </Compile>
+    <Compile Include="frmRichiestaMassivaXml.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmRichiestaMassivaXml.Designer.vb">
+      <DependentUpon>frmRichiestaMassivaXml.vb</DependentUpon>
+    </Compile>
     <Compile Include="frmConsolidamentoDati.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -149,6 +155,7 @@
     <Compile Include="ModuloImportFattureXml.vb" />
     <Compile Include="ModuloStampaAnomalie.vb" />
     <Compile Include="ModuloEsportaAnomalie.vb" />
+    <Compile Include="ModuloRichiestaMassivaXml.vb" />
     <Compile Include="My Project\ApplicationEvents.vb" />
     <Compile Include="My Project\AssemblyInfo.vb" />
     <Compile Include="My Project\Application.Designer.vb">

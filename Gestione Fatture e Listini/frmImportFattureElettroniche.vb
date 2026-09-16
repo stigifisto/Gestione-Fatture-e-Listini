@@ -70,4 +70,10 @@ Public Class frmImportFattureElettroniche
         End Try
     End Sub
 
+    Private Sub cmdRichiestaMassivaXml_Click(sender As Object, e As EventArgs) Handles cmdRichiestaMassivaXml.Click
+        Using frm As New frmRichiestaMassivaXml()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
 End Class

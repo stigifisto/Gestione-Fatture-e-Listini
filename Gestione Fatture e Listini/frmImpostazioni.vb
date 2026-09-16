@@ -6,6 +6,7 @@ Public Class frmImpostazioni
         txtCartellaXmlPronti.Text = My.Settings.CartellaXmlPronti
         txtCartellaBackup.Text = My.Settings.CartellaBackup
         txtCartellaDoppi.Text = My.Settings.CartellaDoppi
+        txtCartellaRichiestaMassiva.Text = My.Settings.CartellaXmlRichiestaMassiva
         nudScostamento.Value = My.Settings.ScostamentoAccettabile
         nudGiorniListini.Value = My.Settings.GiorniImportazioneListini
         nudGiorniFattureAS400.Value = My.Settings.GiorniImportazioneFattureAS400
@@ -40,6 +41,10 @@ Public Class frmImpostazioni
         Sfoglia(txtCartellaDoppi)
     End Sub
 
+    Private Sub btnSfogliaRichiestaMassiva_Click(sender As Object, e As EventArgs) Handles btnSfogliaRichiestaMassiva.Click
+        Sfoglia(txtCartellaRichiestaMassiva)
+    End Sub
+
     Private Sub btnSalva_Click(sender As Object, e As EventArgs) Handles btnSalva.Click
         If String.IsNullOrWhiteSpace(txtCartellaZip.Text) OrElse
            String.IsNullOrWhiteSpace(txtCartellaDecompressi.Text) OrElse
@@ -55,6 +60,7 @@ Public Class frmImpostazioni
         My.Settings.CartellaXmlPronti = txtCartellaXmlPronti.Text.Trim()
         My.Settings.CartellaBackup = txtCartellaBackup.Text.Trim()
         My.Settings.CartellaDoppi = txtCartellaDoppi.Text.Trim()
+        My.Settings.CartellaXmlRichiestaMassiva = txtCartellaRichiestaMassiva.Text.Trim()
         My.Settings.ScostamentoAccettabile = nudScostamento.Value
         My.Settings.GiorniImportazioneListini = CInt(nudGiorniListini.Value)
         My.Settings.GiorniImportazioneFattureAS400 = CInt(nudGiorniFattureAS400.Value)
