@@ -16,6 +16,7 @@ Public Class frmPrezziFattureElettroniche
     Private Sub frmPrezziFattureElettroniche_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         dtpDal.Value = DateTime.Now.AddMonths(-1)
         dtpAl.Value = DateTime.Now
+        rdoStatoTutti.Checked = True
         CaricaFornitori()
     End Sub
 
@@ -61,9 +62,10 @@ Public Class frmPrezziFattureElettroniche
         Try
             Dim dt As DataTable = Await Task.Run(Function() GetAnomaliePrezziFattureElettroniche(cedenteIdCodice, dal, al))
             txtFiltroNumeroFattura.Clear()
+            rdoStatoTutti.Checked = True
             bindingRisultati.DataSource = dt
             dgvRisultati.DataSource = bindingRisultati
-            FormattazioneEsteticaGriglia()
+            AggiornaFiltro()
 
             Dim totale As Decimal = CalcolaTotaleAnomalie(dt)
             lblStatistiche.Text = $"{dt.Rows.Count} righe analizzate — potenziale recupero: € {totale:N2}"
@@ -77,18 +79,64 @@ Public Class frmPrezziFattureElettroniche
 
     ''' <summary>
     ''' Filtra la griglia in tempo reale in base al numero fattura digitato (corrispondenza parziale).
+    ''' Selezionando una fattura specifica lo stato anomalia torna su "Tutti".
     ''' </summary>
     Private Sub txtFiltroNumeroFattura_TextChanged(sender As Object, e As EventArgs) Handles txtFiltroNumeroFattura.TextChanged
         If bindingRisultati.DataSource Is Nothing Then Return
 
-        Dim testo As String = txtFiltroNumeroFattura.Text.Trim()
-        If testo.Length = 0 Then
-            bindingRisultati.RemoveFilter()
-        Else
-            Dim valoreEscaped As String = testo.Replace("'", "''")
-            bindingRisultati.Filter = $"NumeroFattura LIKE '%{valoreEscaped}%'"
+        rdoStatoTutti.Checked = True
+        AggiornaFiltro()
+    End Sub
+
+    ''' <summary>
+    ''' Riapplica il filtro alla griglia combinando il numero fattura digitato con lo stato
+    ''' anomalia selezionato tramite gli option button.
+    ''' </summary>
+    Private Sub RadioStatoAnomalia_CheckedChanged(sender As Object, e As EventArgs) Handles rdoStatoTutti.CheckedChanged,
+        rdoStatoInBolla.CheckedChanged, rdoStatoMancante.CheckedChanged, rdoStatoEccessivo.CheckedChanged, rdoStatoInferiore.CheckedChanged
+        If DirectCast(sender, RadioButton).Checked Then
+            AggiornaFiltro()
         End If
     End Sub
+
+    Private Sub AggiornaFiltro()
+        If bindingRisultati.DataSource Is Nothing Then Return
+
+        Dim condizioni As New List(Of String)
+
+        Dim testo As String = txtFiltroNumeroFattura.Text.Trim()
+        If testo.Length > 0 Then
+            Dim valoreEscaped As String = testo.Replace("'", "''")
+            condizioni.Add($"NumeroFattura LIKE '%{valoreEscaped}%'")
+        End If
+
+        Dim stato As String = StatoAnomaliaSelezionato()
+        If stato IsNot Nothing Then
+            condizioni.Add($"Stato_Anomalia = '{stato.Replace("'", "''")}'")
+        End If
+
+        If condizioni.Count = 0 Then
+            bindingRisultati.RemoveFilter()
+        Else
+            bindingRisultati.Filter = String.Join(" AND ", condizioni)
+        End If
+
+        ' Applicare/rimuovere il filtro ricrea le righe della griglia, perdendo le
+        ' formattazioni per stato anomalia: vanno riapplicate ad ogni cambio di filtro.
+        FormattazioneEsteticaGriglia()
+    End Sub
+
+    ''' <summary>
+    ''' Restituisce il valore di Stato_Anomalia corrispondente all'option button selezionato,
+    ''' oppure Nothing se è selezionato "Tutti".
+    ''' </summary>
+    Private Function StatoAnomaliaSelezionato() As String
+        If rdoStatoInBolla.Checked Then Return "In Bolla"
+        If rdoStatoMancante.Checked Then Return "Mancante a Listino"
+        If rdoStatoEccessivo.Checked Then Return "Prezzo Eccessivo"
+        If rdoStatoInferiore.Checked Then Return "Prezzo Inferiore"
+        Return Nothing
+    End Function
 
     Private Sub btnStampa_Click(sender As Object, e As EventArgs) Handles btnStampa.Click
         Dim fornitore As String = If(cmbFornitori.SelectedIndex >= 0, cmbFornitori.Text, "")
@@ -159,6 +207,7 @@ Public Class frmPrezziFattureElettroniche
             conn.Open()
 
             Dim cmd As New SqlCommand(sql, conn)
+            cmd.CommandTimeout = 180
             cmd.Parameters.AddWithValue("@fornitore", cedenteIdCodice)
             cmd.Parameters.AddWithValue("@dal", dal)
             cmd.Parameters.AddWithValue("@al", al)
@@ -193,6 +242,7 @@ Public Class frmPrezziFattureElettroniche
             ORDER BY s.ID_Fattura, s.NumeroLinea, s.ID_Sconto"
 
         Using cmd As New SqlCommand(sql, conn)
+            cmd.CommandTimeout = 180
             cmd.Parameters.AddWithValue("@fornitore", cedenteIdCodice)
             cmd.Parameters.AddWithValue("@dal", dal)
             cmd.Parameters.AddWithValue("@al", al)

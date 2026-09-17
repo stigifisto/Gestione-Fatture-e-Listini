@@ -38,10 +38,18 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblFiltroNumeroFattura = New System.Windows.Forms.Label()
         Me.btnStampa = New System.Windows.Forms.Button()
         Me.btnEsportaExcel = New System.Windows.Forms.Button()
+        Me.lblStatoAnomalia = New System.Windows.Forms.Label()
+        Me.pnlStatoAnomalia = New System.Windows.Forms.Panel()
+        Me.rdoStatoTutti = New System.Windows.Forms.RadioButton()
+        Me.rdoStatoInBolla = New System.Windows.Forms.RadioButton()
+        Me.rdoStatoMancante = New System.Windows.Forms.RadioButton()
+        Me.rdoStatoEccessivo = New System.Windows.Forms.RadioButton()
+        Me.rdoStatoInferiore = New System.Windows.Forms.RadioButton()
         Me.dgvRisultati = New System.Windows.Forms.DataGridView()
         Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
         Me.lblStatistiche = New System.Windows.Forms.ToolStripStatusLabel()
         Me.Panel1.SuspendLayout()
+        Me.pnlStatoAnomalia.SuspendLayout()
         CType(Me.dgvRisultati, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.StatusStrip1.SuspendLayout()
         Me.SuspendLayout()
@@ -59,10 +67,12 @@ Partial Class frmPrezziFattureElettroniche
         Me.Panel1.Controls.Add(Me.lblFiltroNumeroFattura)
         Me.Panel1.Controls.Add(Me.btnStampa)
         Me.Panel1.Controls.Add(Me.btnEsportaExcel)
+        Me.Panel1.Controls.Add(Me.lblStatoAnomalia)
+        Me.Panel1.Controls.Add(Me.pnlStatoAnomalia)
         Me.Panel1.Dock = System.Windows.Forms.DockStyle.Top
         Me.Panel1.Location = New System.Drawing.Point(0, 0)
         Me.Panel1.Name = "Panel1"
-        Me.Panel1.Size = New System.Drawing.Size(900, 100)
+        Me.Panel1.Size = New System.Drawing.Size(900, 146)
         Me.Panel1.TabIndex = 0
         '
         'btnAnalizza
@@ -161,15 +171,88 @@ Partial Class frmPrezziFattureElettroniche
         Me.btnEsportaExcel.Text = "ESPORTA EXCEL"
         Me.btnEsportaExcel.UseVisualStyleBackColor = True
         '
+        'lblStatoAnomalia
+        '
+        Me.lblStatoAnomalia.AutoSize = True
+        Me.lblStatoAnomalia.Location = New System.Drawing.Point(15, 102)
+        Me.lblStatoAnomalia.Name = "lblStatoAnomalia"
+        Me.lblStatoAnomalia.Size = New System.Drawing.Size(93, 13)
+        Me.lblStatoAnomalia.TabIndex = 11
+        Me.lblStatoAnomalia.Text = "STATO ANOMALIA"
+        '
+        'pnlStatoAnomalia
+        '
+        Me.pnlStatoAnomalia.Controls.Add(Me.rdoStatoTutti)
+        Me.pnlStatoAnomalia.Controls.Add(Me.rdoStatoInBolla)
+        Me.pnlStatoAnomalia.Controls.Add(Me.rdoStatoMancante)
+        Me.pnlStatoAnomalia.Controls.Add(Me.rdoStatoEccessivo)
+        Me.pnlStatoAnomalia.Controls.Add(Me.rdoStatoInferiore)
+        Me.pnlStatoAnomalia.Location = New System.Drawing.Point(15, 119)
+        Me.pnlStatoAnomalia.Name = "pnlStatoAnomalia"
+        Me.pnlStatoAnomalia.Size = New System.Drawing.Size(600, 20)
+        Me.pnlStatoAnomalia.TabIndex = 12
+        '
+        'rdoStatoTutti
+        '
+        Me.rdoStatoTutti.AutoSize = True
+        Me.rdoStatoTutti.Checked = True
+        Me.rdoStatoTutti.Location = New System.Drawing.Point(0, 0)
+        Me.rdoStatoTutti.Name = "rdoStatoTutti"
+        Me.rdoStatoTutti.Size = New System.Drawing.Size(50, 17)
+        Me.rdoStatoTutti.TabIndex = 0
+        Me.rdoStatoTutti.TabStop = True
+        Me.rdoStatoTutti.Text = "Tutti"
+        Me.rdoStatoTutti.UseVisualStyleBackColor = True
+        '
+        'rdoStatoInBolla
+        '
+        Me.rdoStatoInBolla.AutoSize = True
+        Me.rdoStatoInBolla.Location = New System.Drawing.Point(75, 0)
+        Me.rdoStatoInBolla.Name = "rdoStatoInBolla"
+        Me.rdoStatoInBolla.Size = New System.Drawing.Size(70, 17)
+        Me.rdoStatoInBolla.TabIndex = 1
+        Me.rdoStatoInBolla.Text = "In Bolla"
+        Me.rdoStatoInBolla.UseVisualStyleBackColor = True
+        '
+        'rdoStatoMancante
+        '
+        Me.rdoStatoMancante.AutoSize = True
+        Me.rdoStatoMancante.Location = New System.Drawing.Point(165, 0)
+        Me.rdoStatoMancante.Name = "rdoStatoMancante"
+        Me.rdoStatoMancante.Size = New System.Drawing.Size(130, 17)
+        Me.rdoStatoMancante.TabIndex = 2
+        Me.rdoStatoMancante.Text = "Mancante a Listino"
+        Me.rdoStatoMancante.UseVisualStyleBackColor = True
+        '
+        'rdoStatoEccessivo
+        '
+        Me.rdoStatoEccessivo.AutoSize = True
+        Me.rdoStatoEccessivo.Location = New System.Drawing.Point(325, 0)
+        Me.rdoStatoEccessivo.Name = "rdoStatoEccessivo"
+        Me.rdoStatoEccessivo.Size = New System.Drawing.Size(120, 17)
+        Me.rdoStatoEccessivo.TabIndex = 3
+        Me.rdoStatoEccessivo.Text = "Prezzo Eccessivo"
+        Me.rdoStatoEccessivo.UseVisualStyleBackColor = True
+        '
+        'rdoStatoInferiore
+        '
+        Me.rdoStatoInferiore.AutoSize = True
+        Me.rdoStatoInferiore.Location = New System.Drawing.Point(465, 0)
+        Me.rdoStatoInferiore.Name = "rdoStatoInferiore"
+        Me.rdoStatoInferiore.Size = New System.Drawing.Size(120, 17)
+        Me.rdoStatoInferiore.TabIndex = 4
+        Me.rdoStatoInferiore.Text = "Prezzo Inferiore"
+        Me.rdoStatoInferiore.UseVisualStyleBackColor = True
+        '
         'dgvRisultati
         '
         Me.dgvRisultati.AllowUserToAddRows = False
         Me.dgvRisultati.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgvRisultati.Dock = System.Windows.Forms.DockStyle.Fill
-        Me.dgvRisultati.Location = New System.Drawing.Point(0, 100)
+        Me.dgvRisultati.Location = New System.Drawing.Point(0, 146)
         Me.dgvRisultati.Name = "dgvRisultati"
         Me.dgvRisultati.ReadOnly = True
-        Me.dgvRisultati.Size = New System.Drawing.Size(900, 422)
+        Me.dgvRisultati.Size = New System.Drawing.Size(900, 376)
         Me.dgvRisultati.TabIndex = 1
         '
         'StatusStrip1
@@ -200,6 +283,8 @@ Partial Class frmPrezziFattureElettroniche
         Me.Text = "Analisi prezzi fatture elettroniche vs listino Infinity"
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
+        Me.pnlStatoAnomalia.ResumeLayout(False)
+        Me.pnlStatoAnomalia.PerformLayout()
         CType(Me.dgvRisultati, System.ComponentModel.ISupportInitialize).EndInit()
         Me.StatusStrip1.ResumeLayout(False)
         Me.StatusStrip1.PerformLayout()
@@ -220,6 +305,13 @@ Partial Class frmPrezziFattureElettroniche
     Friend WithEvents lblFiltroNumeroFattura As Label
     Friend WithEvents btnStampa As Button
     Friend WithEvents btnEsportaExcel As Button
+    Friend WithEvents lblStatoAnomalia As Label
+    Friend WithEvents pnlStatoAnomalia As Panel
+    Friend WithEvents rdoStatoTutti As RadioButton
+    Friend WithEvents rdoStatoInBolla As RadioButton
+    Friend WithEvents rdoStatoMancante As RadioButton
+    Friend WithEvents rdoStatoEccessivo As RadioButton
+    Friend WithEvents rdoStatoInferiore As RadioButton
     Friend WithEvents dgvRisultati As DataGridView
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents lblStatistiche As ToolStripStatusLabel
