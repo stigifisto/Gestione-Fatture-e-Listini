@@ -139,6 +139,18 @@
     <Compile Include="frmImportFattureElettroniche.Designer.vb">
       <DependentUpon>frmImportFattureElettroniche.vb</DependentUpon>
     </Compile>
+    <Compile Include="frmVisualizzaFatturaElettronica.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmVisualizzaFatturaElettronica.Designer.vb">
+      <DependentUpon>frmVisualizzaFatturaElettronica.vb</DependentUpon>
+    </Compile>
+    <Compile Include="frmAnteprimaFattura.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmAnteprimaFattura.Designer.vb">
+      <DependentUpon>frmAnteprimaFattura.vb</DependentUpon>
+    </Compile>
     <Compile Include="frmSceltaAnalisiPrezzi.vb">
       <SubType>Form</SubType>
     </Compile>
@@ -153,6 +165,8 @@
     </Compile>
     <Compile Include="ModuloImportListiniInfinity.vb" />
     <Compile Include="ModuloImportFattureXml.vb" />
+    <Compile Include="ModuloVisualizzaFatturaXml.vb" />
+    <Compile Include="ModuloVisualizzaFatturaCompatta.vb" />
     <Compile Include="ModuloStampaAnomalie.vb" />
     <Compile Include="ModuloEsportaAnomalie.vb" />
     <Compile Include="ModuloRichiestaMassivaXml.vb" />
@@ -204,6 +218,9 @@
     <None Include="Resources\FattureElettroniche.png" />
     <None Include="Resources\AnalisiPrezzi.png" />
     <None Include="Resources\Impostazioni.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Risorse\Foglio_di_stile_fattura_ordinaria_ver1.2.3.xsl" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="estrai_data_listino.exe">

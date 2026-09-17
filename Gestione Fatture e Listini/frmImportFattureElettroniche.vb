@@ -76,4 +76,10 @@ Public Class frmImportFattureElettroniche
         End Using
     End Sub
 
+    Private Sub cmdVisualizzaFattura_Click(sender As Object, e As EventArgs) Handles cmdVisualizzaFattura.Click
+        Using frm As New frmVisualizzaFatturaElettronica()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
 End Class

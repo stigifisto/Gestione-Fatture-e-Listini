@@ -30,6 +30,7 @@ Partial Class frmImportFattureElettroniche
         Me.cmdImportaXml = New System.Windows.Forms.Button()
         Me.cmdPipelineCompleta = New System.Windows.Forms.Button()
         Me.cmdRichiestaMassivaXml = New System.Windows.Forms.Button()
+        Me.cmdVisualizzaFattura = New System.Windows.Forms.Button()
         Me.ProgressBar1 = New System.Windows.Forms.ProgressBar()
         Me.lblStatus = New System.Windows.Forms.Label()
         Me.SuspendLayout()
@@ -79,29 +80,39 @@ Partial Class frmImportFattureElettroniche
         Me.cmdRichiestaMassivaXml.Text = "Richiesta massiva XML (Agenzia delle Entrate)"
         Me.cmdRichiestaMassivaXml.UseVisualStyleBackColor = True
         '
+        'cmdVisualizzaFattura
+        '
+        Me.cmdVisualizzaFattura.Location = New System.Drawing.Point(12, 242)
+        Me.cmdVisualizzaFattura.Name = "cmdVisualizzaFattura"
+        Me.cmdVisualizzaFattura.Size = New System.Drawing.Size(390, 36)
+        Me.cmdVisualizzaFattura.TabIndex = 5
+        Me.cmdVisualizzaFattura.Text = "VISUALIZZA FATTURA"
+        Me.cmdVisualizzaFattura.UseVisualStyleBackColor = True
+        '
         'ProgressBar1
         '
-        Me.ProgressBar1.Location = New System.Drawing.Point(12, 246)
+        Me.ProgressBar1.Location = New System.Drawing.Point(12, 292)
         Me.ProgressBar1.Name = "ProgressBar1"
         Me.ProgressBar1.Size = New System.Drawing.Size(390, 20)
-        Me.ProgressBar1.TabIndex = 5
+        Me.ProgressBar1.TabIndex = 6
         Me.ProgressBar1.Visible = False
         '
         'lblStatus
         '
         Me.lblStatus.AutoSize = True
-        Me.lblStatus.Location = New System.Drawing.Point(12, 273)
+        Me.lblStatus.Location = New System.Drawing.Point(12, 319)
         Me.lblStatus.Name = "lblStatus"
         Me.lblStatus.Size = New System.Drawing.Size(0, 13)
-        Me.lblStatus.TabIndex = 6
+        Me.lblStatus.TabIndex = 7
         '
         'frmImportFattureElettroniche
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(414, 301)
+        Me.ClientSize = New System.Drawing.Size(414, 347)
         Me.Controls.Add(Me.lblStatus)
         Me.Controls.Add(Me.ProgressBar1)
+        Me.Controls.Add(Me.cmdVisualizzaFattura)
         Me.Controls.Add(Me.cmdRichiestaMassivaXml)
         Me.Controls.Add(Me.cmdPipelineCompleta)
         Me.Controls.Add(Me.cmdImportaXml)
@@ -121,6 +132,7 @@ Partial Class frmImportFattureElettroniche
     Friend WithEvents cmdImportaXml As Button
     Friend WithEvents cmdPipelineCompleta As Button
     Friend WithEvents cmdRichiestaMassivaXml As Button
+    Friend WithEvents cmdVisualizzaFattura As Button
     Friend WithEvents ProgressBar1 As ProgressBar
     Friend WithEvents lblStatus As Label
 End Class
