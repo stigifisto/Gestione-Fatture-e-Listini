@@ -179,6 +179,10 @@ Public Class frmPrezziAS400
         Return dt
     End Function
 
+    Private Sub dgvRisultati_Sorted(sender As Object, e As EventArgs) Handles dgvRisultati.Sorted
+        FormattazioneEsteticaGriglia()
+    End Sub
+
     Private Sub FormattazioneEsteticaGriglia()
         For Each col As DataGridViewColumn In dgvRisultati.Columns
             If col.ValueType Is GetType(Decimal) OrElse col.ValueType Is GetType(Double) Then
