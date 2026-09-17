@@ -6,6 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6A3F2F1E-7B0B-4B7C-9C6B-3B7D5E6E9A31}</ProjectGuid>
     <OutputType>WinExe</OutputType>
+    <ApplicationIcon>Resources\AppIcon.ico</ApplicationIcon>
     <StartupObject>Gestione_Fatture_e_Listini.My.MyApplication</StartupObject>
     <RootNamespace>Gestione_Fatture_e_Listini</RootNamespace>
     <AssemblyName>Gestione Fatture e Listini</AssemblyName>
@@ -218,6 +219,7 @@
     <None Include="Resources\FattureElettroniche.png" />
     <None Include="Resources\AnalisiPrezzi.png" />
     <None Include="Resources\Impostazioni.png" />
+    <None Include="Resources\AppIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Risorse\Foglio_di_stile_fattura_ordinaria_ver1.2.3.xsl" />
