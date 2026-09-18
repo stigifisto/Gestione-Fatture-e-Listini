@@ -151,7 +151,8 @@ Public Class FrmEstrattore
             New Fornitore("Cinque Stelle", "00000447"),
             New Fornitore("Inalca", "00007003"),
             New Fornitore("Inalca Suino", "00007003"),
-            New Fornitore("Fiorani", "00008411")
+            New Fornitore("Fiorani", "00008411"),
+            New Fornitore("C.C.M.", "00009638")
         }
 
         cmbLiafor.DataSource = listaliafor
