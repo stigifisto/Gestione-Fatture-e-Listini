@@ -116,6 +116,12 @@
     <Compile Include="frmPrezziFattureElettroniche.Designer.vb">
       <DependentUpon>frmPrezziFattureElettroniche.vb</DependentUpon>
     </Compile>
+    <Compile Include="frmScegliFornitore.vb">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmScegliFornitore.Designer.vb">
+      <DependentUpon>frmScegliFornitore.vb</DependentUpon>
+    </Compile>
     <Compile Include="frmImpostazioni.vb">
       <SubType>Form</SubType>
     </Compile>

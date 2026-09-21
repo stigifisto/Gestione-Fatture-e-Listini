@@ -38,10 +38,7 @@ Public Class frmPrezziAS400
     End Sub
 
     Private Async Sub btnAnalizza_Click(sender As Object, e As EventArgs) Handles btnAnalizza.Click
-        If cmbFornitori.SelectedValue Is Nothing OrElse IsDBNull(cmbFornitori.SelectedValue) Then
-            MsgBox("Seleziona un fornitore.")
-            Return
-        End If
+        If Not AssicuraFornitoreSelezionato() Then Return
 
         Dim codiceFornitore As String = cmbFornitori.SelectedValue.ToString()
         Dim dal As Date = dtpDal.Value.Date
@@ -69,6 +66,81 @@ Public Class frmPrezziAS400
             btnAnalizza.Enabled = True
         End Try
     End Sub
+
+    ''' <summary>
+    ''' Se cmbFornitori ha già una selezione valida non fa nulla e restituisce True. Altrimenti
+    ''' cerca i fornitori con bolle nel periodo dtpDal/dtpAl e apre frmScegliFornitore per
+    ''' sceglierne uno: se l'utente seleziona una riga, imposta cmbFornitori e restituisce True;
+    ''' se annulla, o non ci sono fornitori nel periodo, restituisce False.
+    ''' </summary>
+    Private Function AssicuraFornitoreSelezionato() As Boolean
+        If cmbFornitori.SelectedValue IsNot Nothing AndAlso Not IsDBNull(cmbFornitori.SelectedValue) Then
+            Return True
+        End If
+
+        Dim dal As Date = dtpDal.Value.Date
+        Dim al As Date = dtpAl.Value.Date
+
+        Dim dtFornitori As DataTable
+        Try
+            dtFornitori = GetFornitoriConFattureNelPeriodo(dal, al)
+        Catch ex As Exception
+            MessageBox.Show("Errore durante la ricerca dei fornitori: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return False
+        End Try
+
+        If dtFornitori.Rows.Count = 0 Then
+            MsgBox("Nessuna fattura trovata nel periodo selezionato.")
+            Return False
+        End If
+
+        Try
+            Using frm As New frmScegliFornitore(dtFornitori)
+                If frm.ShowDialog(Me) <> DialogResult.OK Then Return False
+
+                cmbFornitori.SelectedValue = frm.CodiceFornitoreSelezionato
+            End Using
+        Catch ex As Exception
+            MessageBox.Show("Errore durante la selezione del fornitore: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
+            Return False
+        End Try
+
+        Return cmbFornitori.SelectedValue IsNot Nothing AndAlso Not IsDBNull(cmbFornitori.SelectedValue)
+    End Function
+
+    ''' <summary>
+    ''' Elenca, in ordine alfabetico di descrizione, i fornitori (ba_keysog001) con almeno una
+    ''' bolla (Fatture_AS400.MOADBO) nel range di data indicato, con il relativo conteggio fatture.
+    ''' </summary>
+    Private Function GetFornitoriConFattureNelPeriodo(dal As Date, al As Date) As DataTable
+        Dim sql As String = "
+            SELECT
+                k.Codice,
+                k.Descrizione,
+                COUNT(DISTINCT f.MOANFT) AS NumeroFatture
+            FROM Fatture_AS400 f
+            INNER JOIN (
+                SELECT CONCAT('00', SUBSTRING(KSCODSOG,3,6)) AS Codice, KSDESCRI AS Descrizione
+                FROM ba_keysog001 WHERE KSTIPSOG = 'FOR'
+            ) k ON k.Codice = f.MOAFOR
+            WHERE f.MOADBO BETWEEN @dal AND @al
+            GROUP BY k.Codice, k.Descrizione
+            ORDER BY k.Descrizione"
+
+        Dim dt As New DataTable()
+
+        Using conn As New SqlConnection(connectionString)
+            Dim cmd As New SqlCommand(sql, conn)
+            cmd.CommandTimeout = 180
+            cmd.Parameters.AddWithValue("@dal", dal)
+            cmd.Parameters.AddWithValue("@al", al)
+
+            Dim da As New SqlDataAdapter(cmd)
+            da.Fill(dt)
+        End Using
+
+        Return dt
+    End Function
 
     ''' <summary>
     ''' Filtra la griglia in tempo reale in base al numero fattura digitato (corrispondenza parziale).
