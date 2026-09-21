@@ -177,6 +177,7 @@ Public Class frmPrezziFattureElettroniche
                 r.Quantita,
                 r.PrezzoUnitario AS PrezzoLordo,
                 rif.DataRiferimento,
+                lst.CodiceArticolo AS CodiceArticolo_Listino,
                 lst.PrezzoNettoCalcolato AS Unitario_Netto_Listino
             FROM Fatture_Testate t
             INNER JOIN Fatture_Righe r ON r.ID_Fattura = t.ID_Fattura
@@ -189,7 +190,7 @@ Public Class frmPrezziFattureElettroniche
             ) primoDdt
             CROSS APPLY (SELECT ISNULL(primoDdt.DataDDT, t.DataFattura) AS DataRiferimento) rif
             OUTER APPLY (
-                SELECT TOP 1 l.PrezzoNettoCalcolato
+                SELECT TOP 1 l.CodiceArticolo, l.PrezzoNettoCalcolato
                 FROM Listini_Acquisto_Infinity l
                 WHERE l.ID_FiscaleIVA_Fornitore = t.CedenteIdCodice
                   AND LTRIM(RTRIM(l.CodiceArticoloFornitore)) = LTRIM(RTRIM(r.CodiceArticolo))
