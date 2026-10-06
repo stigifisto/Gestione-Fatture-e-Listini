@@ -97,7 +97,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblAl.AutoSize = True
         Me.lblAl.Location = New System.Drawing.Point(440, 9)
         Me.lblAl.Name = "lblAl"
-        Me.lblAl.Size = New System.Drawing.Size(93, 13)
+        Me.lblAl.Size = New System.Drawing.Size(73, 13)
         Me.lblAl.TabIndex = 4
         Me.lblAl.Text = "FATTURA AL"
         '
@@ -114,7 +114,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblDal.AutoSize = True
         Me.lblDal.Location = New System.Drawing.Point(310, 9)
         Me.lblDal.Name = "lblDal"
-        Me.lblDal.Size = New System.Drawing.Size(93, 13)
+        Me.lblDal.Size = New System.Drawing.Size(81, 13)
         Me.lblDal.TabIndex = 2
         Me.lblDal.Text = "FATTURA DAL"
         '
@@ -149,13 +149,13 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblFiltroNumeroFattura.AutoSize = True
         Me.lblFiltroNumeroFattura.Location = New System.Drawing.Point(710, 9)
         Me.lblFiltroNumeroFattura.Name = "lblFiltroNumeroFattura"
-        Me.lblFiltroNumeroFattura.Size = New System.Drawing.Size(93, 13)
+        Me.lblFiltroNumeroFattura.Size = New System.Drawing.Size(108, 13)
         Me.lblFiltroNumeroFattura.TabIndex = 8
         Me.lblFiltroNumeroFattura.Text = "NUMERO FATTURA"
         '
         'btnStampa
         '
-        Me.btnStampa.Location = New System.Drawing.Point(575, 68)
+        Me.btnStampa.Location = New System.Drawing.Point(710, 68)
         Me.btnStampa.Name = "btnStampa"
         Me.btnStampa.Size = New System.Drawing.Size(120, 26)
         Me.btnStampa.TabIndex = 9
@@ -164,7 +164,7 @@ Partial Class frmPrezziFattureElettroniche
         '
         'btnEsportaExcel
         '
-        Me.btnEsportaExcel.Location = New System.Drawing.Point(710, 68)
+        Me.btnEsportaExcel.Location = New System.Drawing.Point(575, 68)
         Me.btnEsportaExcel.Name = "btnEsportaExcel"
         Me.btnEsportaExcel.Size = New System.Drawing.Size(120, 26)
         Me.btnEsportaExcel.TabIndex = 10
@@ -176,7 +176,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.lblStatoAnomalia.AutoSize = True
         Me.lblStatoAnomalia.Location = New System.Drawing.Point(15, 102)
         Me.lblStatoAnomalia.Name = "lblStatoAnomalia"
-        Me.lblStatoAnomalia.Size = New System.Drawing.Size(93, 13)
+        Me.lblStatoAnomalia.Size = New System.Drawing.Size(101, 13)
         Me.lblStatoAnomalia.TabIndex = 11
         Me.lblStatoAnomalia.Text = "STATO ANOMALIA"
         '
@@ -198,7 +198,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.rdoStatoTutti.Checked = True
         Me.rdoStatoTutti.Location = New System.Drawing.Point(0, 0)
         Me.rdoStatoTutti.Name = "rdoStatoTutti"
-        Me.rdoStatoTutti.Size = New System.Drawing.Size(50, 17)
+        Me.rdoStatoTutti.Size = New System.Drawing.Size(46, 17)
         Me.rdoStatoTutti.TabIndex = 0
         Me.rdoStatoTutti.TabStop = True
         Me.rdoStatoTutti.Text = "Tutti"
@@ -209,7 +209,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.rdoStatoInBolla.AutoSize = True
         Me.rdoStatoInBolla.Location = New System.Drawing.Point(75, 0)
         Me.rdoStatoInBolla.Name = "rdoStatoInBolla"
-        Me.rdoStatoInBolla.Size = New System.Drawing.Size(70, 17)
+        Me.rdoStatoInBolla.Size = New System.Drawing.Size(60, 17)
         Me.rdoStatoInBolla.TabIndex = 1
         Me.rdoStatoInBolla.Text = "In Bolla"
         Me.rdoStatoInBolla.UseVisualStyleBackColor = True
@@ -219,7 +219,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.rdoStatoMancante.AutoSize = True
         Me.rdoStatoMancante.Location = New System.Drawing.Point(165, 0)
         Me.rdoStatoMancante.Name = "rdoStatoMancante"
-        Me.rdoStatoMancante.Size = New System.Drawing.Size(130, 17)
+        Me.rdoStatoMancante.Size = New System.Drawing.Size(115, 17)
         Me.rdoStatoMancante.TabIndex = 2
         Me.rdoStatoMancante.Text = "Mancante a Listino"
         Me.rdoStatoMancante.UseVisualStyleBackColor = True
@@ -229,7 +229,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.rdoStatoEccessivo.AutoSize = True
         Me.rdoStatoEccessivo.Location = New System.Drawing.Point(325, 0)
         Me.rdoStatoEccessivo.Name = "rdoStatoEccessivo"
-        Me.rdoStatoEccessivo.Size = New System.Drawing.Size(120, 17)
+        Me.rdoStatoEccessivo.Size = New System.Drawing.Size(109, 17)
         Me.rdoStatoEccessivo.TabIndex = 3
         Me.rdoStatoEccessivo.Text = "Prezzo Eccessivo"
         Me.rdoStatoEccessivo.UseVisualStyleBackColor = True
@@ -239,7 +239,7 @@ Partial Class frmPrezziFattureElettroniche
         Me.rdoStatoInferiore.AutoSize = True
         Me.rdoStatoInferiore.Location = New System.Drawing.Point(465, 0)
         Me.rdoStatoInferiore.Name = "rdoStatoInferiore"
-        Me.rdoStatoInferiore.Size = New System.Drawing.Size(120, 17)
+        Me.rdoStatoInferiore.Size = New System.Drawing.Size(98, 17)
         Me.rdoStatoInferiore.TabIndex = 4
         Me.rdoStatoInferiore.Text = "Prezzo Inferiore"
         Me.rdoStatoInferiore.UseVisualStyleBackColor = True

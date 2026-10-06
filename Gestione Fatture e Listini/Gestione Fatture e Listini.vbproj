@@ -198,6 +198,9 @@
     <EmbeddedResource Include="frmEstrattore.resx">
       <DependentUpon>frmEstrattore.vb</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="frmPrezziFattureElettroniche.resx">
+      <DependentUpon>frmPrezziFattureElettroniche.vb</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="frmPromoManuale.resx">
       <DependentUpon>frmPromoManuale.vb</DependentUpon>
     </EmbeddedResource>
