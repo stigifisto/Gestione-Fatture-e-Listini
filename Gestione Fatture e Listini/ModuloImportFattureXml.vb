@@ -238,7 +238,7 @@ Module ModuloImportFattureXml
                     Dim nLinea = riga.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "NumeroLinea")?.Value
                     Dim descr = riga.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "Descrizione")?.Value
                     Dim um = riga.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "UnitaMisura")?.Value
-                    Dim codArt = riga.Descendants().FirstOrDefault(Function(x) x.Name.LocalName = "CodiceValore")?.Value
+                    Dim codArt = EstraiCodiceArticolo(riga)
 
                     ' Helper per decimali XML (gestisce punto e virgola)
                     Dim parseXmlDec = Function(nome As String) As Decimal
@@ -455,6 +455,31 @@ Module ModuloImportFattureXml
     ''' Estrae dal file XML la chiave identificativa della fattura (P.IVA/codice del cedente,
     ''' numero e data documento), usata per il controllo duplicati basato sul contenuto.
     ''' </summary>
+    ''' <summary>
+    ''' Restituisce il CodiceValore dell'articolo di una riga. Se la riga ha più nodi CodiceArticolo
+    ''' si ignora quello di tipo EAN (codice a barre) e si usa il primo degli altri; se il nodo è
+    ''' unico, se ne usa il valore indipendentemente dal tipo.
+    ''' </summary>
+    Private Function EstraiCodiceArticolo(riga As XElement) As String
+        Dim nodiArticolo As List(Of XElement) = riga.Elements().Where(Function(x) x.Name.LocalName = "CodiceArticolo").ToList()
+
+        If nodiArticolo.Count = 1 Then
+            Return ValoreFiglio(nodiArticolo(0), "CodiceValore")
+        End If
+
+        For Each nodo In nodiArticolo
+            If ValoreFiglio(nodo, "CodiceTipo") <> "EAN" Then
+                Return ValoreFiglio(nodo, "CodiceValore")
+            End If
+        Next
+
+        Return Nothing
+    End Function
+
+    Private Function ValoreFiglio(nodo As XElement, nomeFiglio As String) As String
+        Return nodo.Elements().FirstOrDefault(Function(x) x.Name.LocalName = nomeFiglio)?.Value?.Trim()
+    End Function
+
     Private Sub EstraiChiaveFattura(pathXML As String, ByRef cedIdCod As String, ByRef numDoc As String, ByRef dataDoc As String)
         Dim doc As XDocument
         Using reader As New IO.StreamReader(pathXML, True)
