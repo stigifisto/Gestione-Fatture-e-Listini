@@ -13,6 +13,35 @@ Public Class frmPrezziFattureElettroniche
         Public Property Importo As Decimal
     End Class
 
+    ''' <summary>
+    ''' Cache dei CedenteIdCodice (P.IVA/codice fiscale) dei fornitori configurati in
+    ''' FornitoriFiltroIntestazione (gestiti da frmFornitoriFiltroIntestazione, raggiungibile da
+    ''' Impostazioni): fornitori per i quali, con la stessa P.IVA, convivono in Fatture_Testate
+    ''' intestazioni (CedenteDenominazione) diverse — tipicamente perché inviano fatture elettroniche
+    ''' tramite più canali/provider distinti (es. MD) — per cui la sola P.IVA non è una selezione
+    ''' sufficiente: va abbinata anche l'intestazione esatta scelta in cmbFornitori.
+    ''' </summary>
+    Private Shared _fornitoriFiltroIntestazione As HashSet(Of String) = Nothing
+
+    Public Shared Sub InvalidaCacheFornitoriFiltroIntestazione()
+        _fornitoriFiltroIntestazione = Nothing
+    End Sub
+
+    Private Shared Function EFornitoreFiltroIntestazione(cedenteIdCodice As String, conn As SqlConnection) As Boolean
+        If _fornitoriFiltroIntestazione Is Nothing Then
+            _fornitoriFiltroIntestazione = New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+            Using cmd As New SqlCommand("SELECT ID_FiscaleIVA_Fornitore FROM FornitoriFiltroIntestazione", conn)
+                Using reader = cmd.ExecuteReader()
+                    While reader.Read()
+                        _fornitoriFiltroIntestazione.Add(reader.GetString(0).Trim())
+                    End While
+                End Using
+            End Using
+        End If
+
+        Return Not String.IsNullOrEmpty(cedenteIdCodice) AndAlso _fornitoriFiltroIntestazione.Contains(cedenteIdCodice.Trim())
+    End Function
+
     Private Sub frmPrezziFattureElettroniche_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         dtpDal.Value = DateTime.Now.AddMonths(-1)
         dtpAl.Value = DateTime.Now
@@ -50,6 +79,8 @@ Public Class frmPrezziFattureElettroniche
         If Not AssicuraFornitoreSelezionato() Then Return
 
         Dim cedenteIdCodice As String = cmbFornitori.SelectedValue.ToString()
+        Dim rigaFornitoreSelezionato = TryCast(cmbFornitori.SelectedItem, DataRowView)
+        Dim denominazioneSelezionata As String = If(rigaFornitoreSelezionato IsNot Nothing, rigaFornitoreSelezionato("CedenteDenominazione").ToString(), Nothing)
         Dim dal As Date = dtpDal.Value.Date
         Dim al As Date = dtpAl.Value.Date
 
@@ -57,7 +88,7 @@ Public Class frmPrezziFattureElettroniche
         lblStatistiche.Text = "Analisi in corso..."
 
         Try
-            Dim dt As DataTable = Await Task.Run(Function() GetAnomaliePrezziFattureElettroniche(cedenteIdCodice, dal, al))
+            Dim dt As DataTable = Await Task.Run(Function() GetAnomaliePrezziFattureElettroniche(cedenteIdCodice, dal, al, denominazioneSelezionata))
             txtFiltroNumeroFattura.Clear()
             rdoStatoTutti.Checked = True
             bindingRisultati.DataSource = dt
@@ -105,7 +136,7 @@ Public Class frmPrezziFattureElettroniche
             Using frm As New frmScegliFornitore(dtFornitori)
                 If frm.ShowDialog(Me) <> DialogResult.OK Then Return False
 
-                cmbFornitori.SelectedValue = frm.CodiceFornitoreSelezionato
+                SelezionaRigaComboFornitori(frm.CodiceFornitoreSelezionato, frm.DescrizioneFornitoreSelezionato)
             End Using
         Catch ex As Exception
             MessageBox.Show("Errore durante la selezione del fornitore: " & ex.Message, "Errore", MessageBoxButtons.OK, MessageBoxIcon.Error)
@@ -114,6 +145,29 @@ Public Class frmPrezziFattureElettroniche
 
         Return cmbFornitori.SelectedValue IsNot Nothing AndAlso Not IsDBNull(cmbFornitori.SelectedValue)
     End Function
+
+    ''' <summary>
+    ''' Imposta la selezione di cmbFornitori sulla riga che corrisponde esattamente a codice +
+    ''' denominazione indicati. Necessario perché alcuni fornitori (es. MD) hanno più righe con lo
+    ''' stesso CedenteIdCodice ma denominazione diversa (fatture inviate tramite provider diversi):
+    ''' impostare semplicemente SelectedValue = codice selezionerebbe in modo ambiguo la prima riga
+    ''' con quel codice nell'elenco, non necessariamente quella scelta in frmScegliFornitore.
+    ''' </summary>
+    Private Sub SelezionaRigaComboFornitori(codice As String, descrizione As String)
+        Dim dtCombo = TryCast(cmbFornitori.DataSource, DataTable)
+        If dtCombo IsNot Nothing Then
+            Dim rigaCorrispondente = dtCombo.AsEnumerable().
+                FirstOrDefault(Function(r) r("CedenteIdCodice").ToString() = codice AndAlso r("CedenteDenominazione").ToString() = descrizione)
+            If rigaCorrispondente IsNot Nothing Then
+                cmbFornitori.SelectedIndex = dtCombo.Rows.IndexOf(rigaCorrispondente)
+                Return
+            End If
+        End If
+
+        ' Fallback: nessuna riga corrisponde esattamente (non dovrebbe succedere), selezioniamo
+        ' comunque per codice.
+        cmbFornitori.SelectedValue = codice
+    End Sub
 
     ''' <summary>
     ''' Elenca, in ordine alfabetico di descrizione, i cedenti/fornitori (Fatture_Testate) con
@@ -230,8 +284,12 @@ Public Class frmPrezziFattureElettroniche
     ''' associato, si usa la DataFattura. Il listino applicabile viene individuato incrociando
     ''' CedenteIdCodice = ID_FiscaleIVA_Fornitore e CodiceArticolo = CodiceArticoloFornitore, con la
     ''' data di riferimento compresa nel range di validità.
+    ''' Per i fornitori configurati in FornitoriFiltroIntestazione (stessa P.IVA usata da più provider
+    ''' di invio fatture elettroniche, con intestazioni diverse, es. MD), la selezione viene
+    ''' rafforzata filtrando anche su CedenteDenominazione = denominazioneSelezionata, altrimenti
+    ''' quest'ultima viene ignorata e si filtra solo per P.IVA come in precedenza.
     ''' </summary>
-    Public Function GetAnomaliePrezziFattureElettroniche(cedenteIdCodice As String, dal As Date, al As Date) As DataTable
+    Public Function GetAnomaliePrezziFattureElettroniche(cedenteIdCodice As String, dal As Date, al As Date, Optional denominazioneSelezionata As String = Nothing) As DataTable
         Dim sql As String = "
             SELECT
                 r.ID_Fattura,
@@ -268,6 +326,7 @@ Public Class frmPrezziFattureElettroniche
             ) lst
             WHERE t.CedenteIdCodice = @fornitore
               AND t.DataFattura BETWEEN @dal AND @al
+              {FILTRO_INTESTAZIONE}
             ORDER BY t.DataFattura, t.NumeroFattura, r.NumeroLinea"
 
         Dim dt As New DataTable()
@@ -275,11 +334,15 @@ Public Class frmPrezziFattureElettroniche
         Using conn As New SqlConnection(connectionString)
             conn.Open()
 
+            Dim filtraPerIntestazione As Boolean = Not String.IsNullOrEmpty(denominazioneSelezionata) AndAlso EFornitoreFiltroIntestazione(cedenteIdCodice, conn)
+            sql = sql.Replace("{FILTRO_INTESTAZIONE}", If(filtraPerIntestazione, "AND t.CedenteDenominazione = @denominazione", ""))
+
             Dim cmd As New SqlCommand(sql, conn)
             cmd.CommandTimeout = 180
             cmd.Parameters.AddWithValue("@fornitore", cedenteIdCodice)
             cmd.Parameters.AddWithValue("@dal", dal)
             cmd.Parameters.AddWithValue("@al", al)
+            If filtraPerIntestazione Then cmd.Parameters.AddWithValue("@denominazione", denominazioneSelezionata)
 
             Dim da As New SqlDataAdapter(cmd)
             da.Fill(dt)

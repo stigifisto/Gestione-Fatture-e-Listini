@@ -221,6 +221,7 @@ Module ModuloImportListiniInfinity
                 "dbo.ba_keysog001.KSCODIVA AS PartitaIVAFornitore, " &
                 "dbo.ZX831_Articoli_PLU001.ZX831_CodArt_Fornitore AS [CodiceArticoloFornitore], " &
                 "ARCODART as [CodiceArticolo], ARDESART AS [DescrizioneArticolo], LDPREZZO AS [PREZZO], " &
+                "LDPERSC1 AS Sconto1, LDPERSC2 AS Sconto2, LDPERSC3 AS Sconto3, LDPERSC4 AS Sconto4, " &
                 "LDINIVAL as [DataInizioValidita], ldendval as [DataFineValidita], '01EUR' as ValidoPer " &
                 "from ba_lisdet001 " &
                 "left join dbo.ba_artico001 ON dbo.ba_artico001.ARFLGART = dbo.ba_lisdet001.LDFLGART AND dbo.ba_artico001.ARKEYART = dbo.ba_lisdet001.LDCODART " &
@@ -305,8 +306,8 @@ Module ModuloImportListiniInfinity
         Dim sqlDelete As String = "DELETE FROM Listini_Acquisto_Infinity WHERE DataFineValidita > @dataInizio"
         Dim sqlInsert As String = "INSERT INTO Listini_Acquisto_Infinity (" &
             "CodiceFornitore, ID_FiscaleIVA_Fornitore, CodiceArticoloFornitore, CodiceArticoloAs400, CodiceArticolo, DescrizioneArticolo, " &
-            "PrezzoLordo, DataInizioValidita, DataFineValidita, ValidoPer) " &
-            "VALUES (@codfor, @piva, @art, @artas400, @cdart, @desc, @prezzo, @inizio, @fine, @valper)"
+            "PrezzoLordo, Sconto1, Sconto2, Sconto3, Sconto4, DataInizioValidita, DataFineValidita, ValidoPer) " &
+            "VALUES (@codfor, @piva, @art, @artas400, @cdart, @desc, @prezzo, @s1, @s2, @s3, @s4, @inizio, @fine, @valper)"
 
         Using conn As New SqlConnection(connectionString)
             conn.Open()
@@ -328,6 +329,10 @@ Module ModuloImportListiniInfinity
                             cmd.Parameters.AddWithValue("@cdart", If(IsDBNull(row("CodiceArticolo")), DBNull.Value, row("CodiceArticolo")))
                             cmd.Parameters.AddWithValue("@desc", If(IsDBNull(row("DescrizioneArticolo")), "", row("DescrizioneArticolo")))
                             cmd.Parameters.AddWithValue("@prezzo", row("PREZZO"))
+                            cmd.Parameters.AddWithValue("@s1", If(IsDBNull(row("Sconto1")), 0, row("Sconto1")))
+                            cmd.Parameters.AddWithValue("@s2", If(IsDBNull(row("Sconto2")), 0, row("Sconto2")))
+                            cmd.Parameters.AddWithValue("@s3", If(IsDBNull(row("Sconto3")), 0, row("Sconto3")))
+                            cmd.Parameters.AddWithValue("@s4", If(IsDBNull(row("Sconto4")), 0, row("Sconto4")))
                             cmd.Parameters.AddWithValue("@inizio", row("DataInizioValidita"))
                             cmd.Parameters.AddWithValue("@fine", row("DataFineValidita"))
                             cmd.Parameters.AddWithValue("@valper", row("ValidoPer"))

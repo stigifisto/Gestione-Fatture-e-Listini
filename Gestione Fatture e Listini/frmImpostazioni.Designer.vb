@@ -50,6 +50,9 @@ Partial Class frmImpostazioni
         Me.nudGiorniListini = New System.Windows.Forms.NumericUpDown()
         Me.lblGiorniFattureAS400 = New System.Windows.Forms.Label()
         Me.nudGiorniFattureAS400 = New System.Windows.Forms.NumericUpDown()
+        Me.btnFornitoriPrezzoInDescrizione = New System.Windows.Forms.Button()
+        Me.btnFornitoriRecuperoDdtEdi = New System.Windows.Forms.Button()
+        Me.btnFornitoriFiltroIntestazione = New System.Windows.Forms.Button()
         Me.btnSalva = New System.Windows.Forms.Button()
         Me.btnAnnulla = New System.Windows.Forms.Button()
         CType(Me.nudScostamento, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -264,21 +267,48 @@ Partial Class frmImpostazioni
         Me.nudGiorniFattureAS400.TabIndex = 23
         Me.nudGiorniFattureAS400.Value = New Decimal(New Integer() {90, 0, 0, 0})
         '
+        'btnFornitoriPrezzoInDescrizione
+        '
+        Me.btnFornitoriPrezzoInDescrizione.Location = New System.Drawing.Point(15, 401)
+        Me.btnFornitoriPrezzoInDescrizione.Name = "btnFornitoriPrezzoInDescrizione"
+        Me.btnFornitoriPrezzoInDescrizione.Size = New System.Drawing.Size(290, 30)
+        Me.btnFornitoriPrezzoInDescrizione.TabIndex = 24
+        Me.btnFornitoriPrezzoInDescrizione.Text = "Fornitori con prezzo in descrizione..."
+        Me.btnFornitoriPrezzoInDescrizione.UseVisualStyleBackColor = True
+        '
+        'btnFornitoriRecuperoDdtEdi
+        '
+        Me.btnFornitoriRecuperoDdtEdi.Location = New System.Drawing.Point(315, 401)
+        Me.btnFornitoriRecuperoDdtEdi.Name = "btnFornitoriRecuperoDdtEdi"
+        Me.btnFornitoriRecuperoDdtEdi.Size = New System.Drawing.Size(261, 30)
+        Me.btnFornitoriRecuperoDdtEdi.TabIndex = 25
+        Me.btnFornitoriRecuperoDdtEdi.Text = "Fornitori con recupero DDT da EDI..."
+        Me.btnFornitoriRecuperoDdtEdi.UseVisualStyleBackColor = True
+        '
+        'btnFornitoriFiltroIntestazione
+        '
+        Me.btnFornitoriFiltroIntestazione.Location = New System.Drawing.Point(15, 438)
+        Me.btnFornitoriFiltroIntestazione.Name = "btnFornitoriFiltroIntestazione"
+        Me.btnFornitoriFiltroIntestazione.Size = New System.Drawing.Size(561, 30)
+        Me.btnFornitoriFiltroIntestazione.TabIndex = 26
+        Me.btnFornitoriFiltroIntestazione.Text = "Fornitori con selezione forte per intestazione..."
+        Me.btnFornitoriFiltroIntestazione.UseVisualStyleBackColor = True
+        '
         'btnSalva
         '
-        Me.btnSalva.Location = New System.Drawing.Point(420, 401)
+        Me.btnSalva.Location = New System.Drawing.Point(420, 481)
         Me.btnSalva.Name = "btnSalva"
         Me.btnSalva.Size = New System.Drawing.Size(75, 30)
-        Me.btnSalva.TabIndex = 24
+        Me.btnSalva.TabIndex = 27
         Me.btnSalva.Text = "Salva"
         Me.btnSalva.UseVisualStyleBackColor = True
         '
         'btnAnnulla
         '
-        Me.btnAnnulla.Location = New System.Drawing.Point(501, 401)
+        Me.btnAnnulla.Location = New System.Drawing.Point(501, 481)
         Me.btnAnnulla.Name = "btnAnnulla"
         Me.btnAnnulla.Size = New System.Drawing.Size(75, 30)
-        Me.btnAnnulla.TabIndex = 25
+        Me.btnAnnulla.TabIndex = 28
         Me.btnAnnulla.Text = "Annulla"
         Me.btnAnnulla.UseVisualStyleBackColor = True
         '
@@ -288,7 +318,7 @@ Partial Class frmImpostazioni
         Me.CancelButton = Me.btnAnnulla
         Me.AutoScaleDimensions = New System.Drawing.SizeF(6.0!, 13.0!)
         Me.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font
-        Me.ClientSize = New System.Drawing.Size(588, 443)
+        Me.ClientSize = New System.Drawing.Size(588, 523)
         Me.Controls.Add(Me.lblZip)
         Me.Controls.Add(Me.txtCartellaZip)
         Me.Controls.Add(Me.btnSfogliaZip)
@@ -313,6 +343,9 @@ Partial Class frmImpostazioni
         Me.Controls.Add(Me.nudGiorniListini)
         Me.Controls.Add(Me.lblGiorniFattureAS400)
         Me.Controls.Add(Me.nudGiorniFattureAS400)
+        Me.Controls.Add(Me.btnFornitoriPrezzoInDescrizione)
+        Me.Controls.Add(Me.btnFornitoriRecuperoDdtEdi)
+        Me.Controls.Add(Me.btnFornitoriFiltroIntestazione)
         Me.Controls.Add(Me.btnSalva)
         Me.Controls.Add(Me.btnAnnulla)
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog
@@ -353,6 +386,9 @@ Partial Class frmImpostazioni
     Friend WithEvents nudGiorniListini As NumericUpDown
     Friend WithEvents lblGiorniFattureAS400 As Label
     Friend WithEvents nudGiorniFattureAS400 As NumericUpDown
+    Friend WithEvents btnFornitoriPrezzoInDescrizione As Button
+    Friend WithEvents btnFornitoriRecuperoDdtEdi As Button
+    Friend WithEvents btnFornitoriFiltroIntestazione As Button
     Friend WithEvents btnSalva As Button
     Friend WithEvents btnAnnulla As Button
 End Class

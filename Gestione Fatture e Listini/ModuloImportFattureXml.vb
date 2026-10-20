@@ -2,6 +2,7 @@ Imports System.Data.SqlClient
 Imports System.IO
 Imports System.IO.Compression
 Imports System.Security.Cryptography.Pkcs
+Imports System.Text.RegularExpressions
 Imports System.Xml.Linq
 
 ''' <summary>
@@ -12,6 +13,171 @@ Imports System.Xml.Linq
 ''' </summary>
 Module ModuloImportFattureXml
     Public Const connectionString As String = "Server=192.168.2.19\inalcasql12;Database=infinitydb;User ID=infinity_UTENTE;Password=antonio.speziali"
+
+    ''' <summary>
+    ''' Cache dei CedenteIdCodice (P.IVA/codice fiscale) dei fornitori configurati in
+    ''' FornitoriPrezzoInDescrizione (gestiti da frmFornitoriPrezzoInDescrizione, raggiungibile da
+    ''' Impostazioni). Caricata una sola volta per ciclo di importazione; InvalidaCache va chiamata
+    ''' dopo ogni modifica alla tabella per non dover riavviare l'applicazione.
+    ''' </summary>
+    Private _fornitoriPrezzoInDescrizione As HashSet(Of String) = Nothing
+
+    Public Sub InvalidaCacheFornitoriPrezzoInDescrizione()
+        _fornitoriPrezzoInDescrizione = Nothing
+    End Sub
+
+    Private Function EFornitoreConPrezzoInDescrizione(cedenteIdCodice As String, conn As SqlConnection, trans As SqlTransaction) As Boolean
+        If _fornitoriPrezzoInDescrizione Is Nothing Then
+            _fornitoriPrezzoInDescrizione = New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+            Using cmd As New SqlCommand("SELECT ID_FiscaleIVA_Fornitore FROM FornitoriPrezzoInDescrizione", conn, trans)
+                Using reader = cmd.ExecuteReader()
+                    While reader.Read()
+                        _fornitoriPrezzoInDescrizione.Add(reader.GetString(0).Trim())
+                    End While
+                End Using
+            End Using
+        End If
+
+        Return Not String.IsNullOrEmpty(cedenteIdCodice) AndAlso _fornitoriPrezzoInDescrizione.Contains(cedenteIdCodice.Trim())
+    End Function
+
+    ''' <summary>
+    ''' Per i fornitori configurati in FornitoriPrezzoInDescrizione, quantità (in kg) e prezzo al kg
+    ''' reali non sono nei nodi standard Quantita/PrezzoUnitario (che riportano invece numero di
+    ''' colli e prezzo per collo), ma nel testo libero della Descrizione, nella forma
+    ''' "... &lt;qta&gt; prezzo al kg &lt;prezzo&gt; Lotto n. ...": es.
+    ''' "PEC. ADRIANUS Ø 22 BASSO KG. 3,800 c.a kg.       30,50 prezzo al kg       15,650 Lotto n.239-25"
+    ''' dove la quantità reale è 30,50 kg al prezzo di 15,650 €/kg (e non i 10 colli/47,73 € del nodo
+    ''' XML). Lo sconto di riga (Fatture_Sconti) si applica comunque sul prezzo al kg così ottenuto.
+    ''' </summary>
+    Private ReadOnly RegexPrezzoAlKgInDescrizione As New Regex(
+        "(\d+(?:[.,]\d+)?)\s+prezzo\s+al\s*kg[.:]?\s+(\d+(?:[.,]\d+)?)",
+        RegexOptions.IgnoreCase)
+
+    Private Function ProvaEstraiQuantitaEPrezzoDaDescrizione(descrizione As String, ByRef quantitaKg As Decimal, ByRef prezzoAlKg As Decimal) As Boolean
+        quantitaKg = 0
+        prezzoAlKg = 0
+        If String.IsNullOrEmpty(descrizione) Then Return False
+
+        Dim m = RegexPrezzoAlKgInDescrizione.Match(descrizione)
+        If Not m.Success Then Return False
+
+        Dim okQ = Decimal.TryParse(m.Groups(1).Value.Replace(",", "."), Globalization.NumberStyles.Number, Globalization.CultureInfo.InvariantCulture, quantitaKg)
+        Dim okP = Decimal.TryParse(m.Groups(2).Value.Replace(",", "."), Globalization.NumberStyles.Number, Globalization.CultureInfo.InvariantCulture, prezzoAlKg)
+        Return okQ AndAlso okP AndAlso quantitaKg > 0 AndAlso prezzoAlKg > 0
+    End Function
+
+    ''' <summary>
+    ''' Cache dei CedenteIdCodice (P.IVA/codice fiscale) dei fornitori configurati in
+    ''' FornitoriRecuperoDdtEdi (gestiti da frmFornitoriRecuperoDdtEdi, raggiungibile da
+    ''' Impostazioni): fornitori che non indicano in fattura elettronica alcun
+    ''' RiferimentoNumeroLinea per i DDT (es. Colosio Formaggi), per i quali si tenta di ricostruire
+    ''' l'abbinamento riga/DDT incrociando i dati ricevuti via canale EDI (tabelle WRXTSD/WRXRGD).
+    ''' </summary>
+    Private _fornitoriRecuperoDdtEdi As HashSet(Of String) = Nothing
+
+    Public Sub InvalidaCacheFornitoriRecuperoDdtEdi()
+        _fornitoriRecuperoDdtEdi = Nothing
+    End Sub
+
+    Private Function EFornitoreRecuperoDdtEdi(cedenteIdCodice As String, conn As SqlConnection, trans As SqlTransaction) As Boolean
+        If _fornitoriRecuperoDdtEdi Is Nothing Then
+            _fornitoriRecuperoDdtEdi = New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+            Using cmd As New SqlCommand("SELECT ID_FiscaleIVA_Fornitore FROM FornitoriRecuperoDdtEdi", conn, trans)
+                Using reader = cmd.ExecuteReader()
+                    While reader.Read()
+                        _fornitoriRecuperoDdtEdi.Add(reader.GetString(0).Trim())
+                    End While
+                End Using
+            End Using
+        End If
+
+        Return Not String.IsNullOrEmpty(cedenteIdCodice) AndAlso _fornitoriRecuperoDdtEdi.Contains(cedenteIdCodice.Trim())
+    End Function
+
+    ''' <summary>
+    ''' Cache P.IVA/codice fiscale fornitore -&gt; codice gestionale (KSCODSOG), risolto tramite
+    ''' l'anagrafica fornitori ba_keysog001 (KSTIPSOG = 'FOR'), necessario per interrogare le tabelle
+    ''' EDI WRXTSD/WRXRGD che indicizzano i documenti per codice gestionale e non per P.IVA.
+    ''' </summary>
+    Private ReadOnly _codiciGestionaliFornitori As New Dictionary(Of String, String)(StringComparer.OrdinalIgnoreCase)
+
+    Private Function GetCodiceGestionaleFornitore(cedenteIdCodice As String, conn As SqlConnection, trans As SqlTransaction) As String
+        If String.IsNullOrEmpty(cedenteIdCodice) Then Return Nothing
+        Dim chiave = cedenteIdCodice.Trim()
+
+        Dim codice As String = Nothing
+        If _codiciGestionaliFornitori.TryGetValue(chiave, codice) Then Return codice
+
+        Dim sql = "SELECT TOP 1 KSCODSOG FROM ba_keysog001 WHERE KSTIPSOG = 'FOR' AND (RTRIM(KSCODFIS) = @piva OR RTRIM(KSCODIVA) = @piva)"
+        Using cmd As New SqlCommand(sql, conn, trans)
+            cmd.Parameters.AddWithValue("@piva", chiave)
+            Dim risultato = cmd.ExecuteScalar()
+            codice = If(risultato Is Nothing OrElse risultato Is DBNull.Value, Nothing, risultato.ToString().Trim())
+        End Using
+
+        _codiciGestionaliFornitori(chiave) = codice
+        Return codice
+    End Function
+
+    ''' <summary>
+    ''' Estrae la parte numerica (intera) del numero DDT, es. "1/8609" -&gt; 8609, per confrontarla col
+    ''' codice documento EDI (RXTSDCAT, es. "008609"), che riporta lo stesso numero senza prefisso e
+    ''' con zeri di riempimento a sinistra.
+    ''' </summary>
+    Private Function EstraiNumeroDdtIntero(numeroDdt As String) As Integer?
+        If String.IsNullOrEmpty(numeroDdt) Then Return Nothing
+        Dim parteNumerica = numeroDdt
+        Dim idxSlash = numeroDdt.LastIndexOf("/"c)
+        If idxSlash >= 0 Then parteNumerica = numeroDdt.Substring(idxSlash + 1)
+
+        Dim valore As Integer
+        If Integer.TryParse(parteNumerica.Trim(), valore) Then Return valore
+        Return Nothing
+    End Function
+
+    ''' <summary>
+    ''' Recupera, per il codice gestionale e il DDT (numero + data) indicati, le coppie
+    ''' CodiceArticolo/Quantita ricevute via EDI (WRXTSD/WRXRGD), da incrociare con le righe della
+    ''' fattura elettronica dello stesso fornitore per ricostruire l'abbinamento riga/DDT quando
+    ''' l'XML non lo fornisce. Il match tra numero DDT XML ed EDI avviene su numero (parte intera) +
+    ''' data, perché il solo numero si ripete tra anni diversi.
+    ''' </summary>
+    Private Function GetRigheEdiPerDdt(codiceGestionale As String, numeroDdt As String, dataDdt As String, conn As SqlConnection, trans As SqlTransaction) As List(Of (CodiceArticolo As String, Quantita As Decimal))
+        Dim risultato As New List(Of (CodiceArticolo As String, Quantita As Decimal))
+
+        Dim numeroDdtIntero = EstraiNumeroDdtIntero(numeroDdt)
+        Dim dataDdtParsata As Date
+        If String.IsNullOrEmpty(codiceGestionale) OrElse Not numeroDdtIntero.HasValue OrElse
+           String.IsNullOrEmpty(dataDdt) OrElse Not Date.TryParse(dataDdt, Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.None, dataDdtParsata) Then
+            Return risultato
+        End If
+
+        Dim sql = "
+            SELECT RXRGDPRF, RXRGDQT1
+            FROM WRXTSD
+            INNER JOIN WRXRGD ON RXTSDCOD = RXRGDCOD
+            WHERE RXTSDANA = @cod
+              AND RXTSDDTD = @data
+              AND TRY_CAST(RXTSDCAT AS INT) = @numddt"
+
+        Using cmd As New SqlCommand(sql, conn, trans)
+            cmd.Parameters.AddWithValue("@cod", codiceGestionale)
+            cmd.Parameters.AddWithValue("@data", dataDdtParsata.ToString("yyyyMMdd"))
+            cmd.Parameters.AddWithValue("@numddt", numeroDdtIntero.Value)
+            Using reader = cmd.ExecuteReader()
+                While reader.Read()
+                    If reader.IsDBNull(0) Then Continue While
+                    Dim codArt = reader.GetString(0).Trim()
+                    If String.IsNullOrEmpty(codArt) Then Continue While
+                    Dim qta As Decimal = If(reader.IsDBNull(1), 0D, CDec(reader.GetDouble(1)))
+                    risultato.Add((codArt, qta))
+                End While
+            End Using
+        End Using
+
+        Return risultato
+    End Function
 
     Public Function DecomprimiZip(Optional progress As IProgress(Of String) = Nothing) As String
         Dim cartellaZip As String = My.Settings.CartellaZip
@@ -231,6 +397,11 @@ Module ModuloImportFattureXml
                 ' Recupera ID_Fattura dopo l'insert della testata...
                 Dim idFattura As Integer = InserisciTestataEGetId(doc, pathXML, conn, trans)
 
+                Dim header = root.Descendants().FirstOrDefault(Function(x) x.Name.LocalName = "FatturaElettronicaHeader")
+                Dim cedente = header?.Descendants().FirstOrDefault(Function(x) x.Name.LocalName = "CedentePrestatore")
+                Dim cedIdCod = cedente?.Descendants().FirstOrDefault(Function(x) x.Name.LocalName = "IdCodice")?.Value
+                Dim fornitoreConPrezzoInDescrizione As Boolean = EFornitoreConPrezzoInDescrizione(cedIdCod, conn, trans)
+
                 ' --- 3. INSERIMENTO RIGHE, UNITÀ MISURA E SCONTI ---
                 Dim nodiLinee = body.Descendants().Where(Function(x) x.Name.LocalName = "DettaglioLinee")
 
@@ -246,6 +417,23 @@ Module ModuloImportFattureXml
                                           Return If(String.IsNullOrEmpty(v), 0, Decimal.Parse(v.Replace(",", "."), System.Globalization.CultureInfo.InvariantCulture))
                                       End Function
 
+                    Dim quantitaRiga = parseXmlDec("Quantita")
+                    Dim prezzoUnitarioRiga = parseXmlDec("PrezzoUnitario")
+                    Dim umRiga = um
+
+                    ' Per i fornitori in FornitoriPrezzoInDescrizione, Quantita/PrezzoUnitario del nodo
+                    ' XML sono per collo (non per kg): se la Descrizione riporta "<kg> prezzo al kg
+                    ' <prezzo>" si usano quei valori reali. Se il pattern non matcha (es. righe
+                    ' puramente descrittive, senza prodotto) si mantengono i valori standard.
+                    If fornitoreConPrezzoInDescrizione Then
+                        Dim quantitaKg As Decimal, prezzoAlKg As Decimal
+                        If ProvaEstraiQuantitaEPrezzoDaDescrizione(descr, quantitaKg, prezzoAlKg) Then
+                            quantitaRiga = quantitaKg
+                            prezzoUnitarioRiga = prezzoAlKg
+                            umRiga = "KG"
+                        End If
+                    End If
+
                     ' INSERT RIGA
                     Dim sqlR As String = "INSERT INTO Fatture_Righe (ID_Fattura, NumeroLinea, CodiceArticolo, Descrizione, Quantita, PrezzoUnitario, PrezzoTotale, AliquotaIVA, UnitaMisura) " &
                                              "VALUES (@id, @lin, @art, @des, @qta, @pre, @tot, @iva, @um)"
@@ -255,11 +443,11 @@ Module ModuloImportFattureXml
                         cmdR.Parameters.AddWithValue("@lin", If(nLinea, "0"))
                         cmdR.Parameters.AddWithValue("@art", If(codArt, DBNull.Value))
                         cmdR.Parameters.AddWithValue("@des", If(descr, ""))
-                        cmdR.Parameters.AddWithValue("@qta", parseXmlDec("Quantita"))
-                        cmdR.Parameters.AddWithValue("@pre", parseXmlDec("PrezzoUnitario"))
+                        cmdR.Parameters.AddWithValue("@qta", quantitaRiga)
+                        cmdR.Parameters.AddWithValue("@pre", prezzoUnitarioRiga)
                         cmdR.Parameters.AddWithValue("@tot", parseXmlDec("PrezzoTotale"))
                         cmdR.Parameters.AddWithValue("@iva", parseXmlDec("AliquotaIVA"))
-                        cmdR.Parameters.AddWithValue("@um", If(um, DBNull.Value))
+                        cmdR.Parameters.AddWithValue("@um", If(umRiga, DBNull.Value))
                         cmdR.ExecuteNonQuery()
                     End Using
 
@@ -350,8 +538,40 @@ Module ModuloImportFattureXml
                         Next
                     Next
                 Else
+                    ' Per i fornitori configurati in FornitoriRecuperoDdtEdi (nessun RiferimentoNumeroLinea
+                    ' mai presente in XML), prima di arrenderci per i DDT privi di riferimenti tentiamo di
+                    ' ricostruirli incrociando CodiceArticolo+Quantita con i dati ricevuti via EDI.
+                    If blocchiDDT.Any(Function(b) b.Riferimenti.Count = 0) AndAlso EFornitoreRecuperoDdtEdi(cedIdCod, conn, trans) Then
+                        Dim codiceGestionale = GetCodiceGestionaleFornitore(cedIdCod, conn, trans)
+                        If Not String.IsNullOrEmpty(codiceGestionale) Then
+                            Dim lineeGiaAssegnate As New HashSet(Of Integer)(blocchiDDT.SelectMany(Function(b) b.Riferimenti))
+                            Dim lineeDisponibili = nodiLinee.Select(Function(r) New With {
+                                    .NumeroLinea = CInt(If(r.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "NumeroLinea")?.Value, "0")),
+                                    .CodiceArticolo = EstraiCodiceArticolo(r),
+                                    .Quantita = If(String.IsNullOrEmpty(r.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "Quantita")?.Value), 0D,
+                                                   Decimal.Parse(r.Elements().FirstOrDefault(Function(x) x.Name.LocalName = "Quantita").Value.Replace(",", "."), Globalization.CultureInfo.InvariantCulture))
+                                }).
+                                Where(Function(r) Not lineeGiaAssegnate.Contains(r.NumeroLinea) AndAlso Not String.IsNullOrEmpty(r.CodiceArticolo)).
+                                ToList()
+
+                            For Each b In blocchiDDT
+                                If b.Riferimenti.Count > 0 Then Continue For
+
+                                Dim righeEdi = GetRigheEdiPerDdt(codiceGestionale, b.NumeroDDT, b.DataDDT, conn, trans)
+                                For Each rigaEdi In righeEdi
+                                    Dim match = lineeDisponibili.FirstOrDefault(Function(l) String.Equals(l.CodiceArticolo, rigaEdi.CodiceArticolo, StringComparison.OrdinalIgnoreCase) AndAlso Math.Abs(l.Quantita - rigaEdi.Quantita) < 0.01D)
+                                    If match IsNot Nothing Then
+                                        b.Riferimenti.Add(match.NumeroLinea)
+                                        lineeDisponibili.Remove(match)
+                                    End If
+                                Next
+                            Next
+                        End If
+                    End If
+
                     For Each b In blocchiDDT
-                        ' RiferimentoNumeroLinea è opzionale (0..N): se assente, il DDT va comunque registrato
+                        ' RiferimentoNumeroLinea è opzionale (0..N): se assente (e non risolto via EDI),
+                        ' il DDT va comunque registrato
                         If b.Riferimenti.Count = 0 Then
                             InserisciDDT(idFattura, b.NumeroDDT, b.DataDDT, DBNull.Value, conn, trans)
                         Else

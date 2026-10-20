@@ -45,6 +45,24 @@ Public Class frmImpostazioni
         Sfoglia(txtCartellaRichiestaMassiva)
     End Sub
 
+    Private Sub btnFornitoriPrezzoInDescrizione_Click(sender As Object, e As EventArgs) Handles btnFornitoriPrezzoInDescrizione.Click
+        Using frm As New frmFornitoriPrezzoInDescrizione()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
+    Private Sub btnFornitoriRecuperoDdtEdi_Click(sender As Object, e As EventArgs) Handles btnFornitoriRecuperoDdtEdi.Click
+        Using frm As New frmFornitoriRecuperoDdtEdi()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
+    Private Sub btnFornitoriFiltroIntestazione_Click(sender As Object, e As EventArgs) Handles btnFornitoriFiltroIntestazione.Click
+        Using frm As New frmFornitoriFiltroIntestazione()
+            frm.ShowDialog(Me)
+        End Using
+    End Sub
+
     Private Sub btnSalva_Click(sender As Object, e As EventArgs) Handles btnSalva.Click
         If String.IsNullOrWhiteSpace(txtCartellaZip.Text) OrElse
            String.IsNullOrWhiteSpace(txtCartellaDecompressi.Text) OrElse
