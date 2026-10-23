@@ -82,6 +82,20 @@ Module ModuloImportListiniInfinity
         "CodiceFornitore, ID_FiscaleIVA_Fornitore, CodiceArticolo, DescrizioneArticolo, " &
         "PrezzoLordo, Sconto1, Sconto2, Sconto3, Sconto4, DataInizioValidita, DataFineValidita, ValidoPer, DescrizioneListino) " &
         "VALUES (@codfor, @piva, @cdart, @desc, @prezzo, @s1, @s2, @s3, @s4, @inizio, @fine, @valper, @desclis)"
+        ' L'import legge da AS400 solo i prezzi da dataInizio in poi, quindi l'ultimo prezzo
+        ' già presente in tabella prima di quella data resterebbe aperto al 31/12/2099,
+        ' sovrapponendosi ai nuovi. Si ricalcola la data fine su tutta la tabella: ogni prezzo
+        ' termina il giorno prima del successivo (stesso fornitore, articolo e ValidoPer).
+        Dim sqlRicalcolaFine As String = "
+            ;WITH x AS (
+                SELECT DataFineValidita,
+                       ISNULL(DATEADD(DAY, -1, LEAD(DataInizioValidita) OVER (
+                           PARTITION BY CodiceFornitore, CodiceArticolo, ValidoPer
+                           ORDER BY DataInizioValidita)), '20991231') AS NuovaFine
+                FROM Listini_Acquisto_As400
+            )
+            UPDATE x SET DataFineValidita = NuovaFine
+            WHERE DataFineValidita IS NULL OR DataFineValidita <> NuovaFine"
 
         Using conn As New SqlConnection(connectionString)
             conn.Open()
@@ -114,6 +128,12 @@ Module ModuloImportListiniInfinity
 
                         If i Mod 100 = 99 Then progress?.Report(i + 1)
                     Next
+
+                    Using cmdFine As New SqlCommand(sqlRicalcolaFine, conn, trans)
+                        cmdFine.CommandTimeout = 300
+                        cmdFine.ExecuteNonQuery()
+                    End Using
+
                     trans.Commit()
                     progress?.Report(dt.Rows.Count)
                 Catch ex As Exception

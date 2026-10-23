@@ -275,7 +275,9 @@ Public Class frmPrezziAS400
                   AND f.MOADBO >= l.DataInizioValidita
                   AND (l.DataFineValidita IS NULL OR f.MOADBO <= l.DataFineValidita)
                   AND (l.ValidoPer = vp.VALIDOPER OR l.ValidoPer = '01EUR')
-                ORDER BY CASE WHEN l.ValidoPer = vp.VALIDOPER THEN 0 ELSE 1 END
+                -- A parità di ValidoPer vince il prezzo più recente, nel caso in tabella
+                -- restino periodi di validità sovrapposti.
+                ORDER BY CASE WHEN l.ValidoPer = vp.VALIDOPER THEN 0 ELSE 1 END, l.DataInizioValidita DESC
             ) lst
             WHERE f.MOAFOR = @fornitore
               AND f.MOADBO BETWEEN @dal AND @al
