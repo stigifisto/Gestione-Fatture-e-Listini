@@ -193,9 +193,16 @@ Module ModuloImportFattureXml
             Return "Decompressione ZIP: nessun file ZIP trovato nella cartella di download."
         End If
 
+        ' Cartelle in cui un nome già presente indica una fattura già ricevuta (in lavorazione o
+        ' archiviata): un nuovo file con la stessa radice va rinominato per non sovrascriverla.
+        Dim cartelleStorico As String() = {My.Settings.CartellaXmlPronti, My.Settings.CartellaBackup}
+        Dim cartelleTutte As String() = {cartellaDecompressi, My.Settings.CartellaXmlPronti, My.Settings.CartellaBackup}
+
         Dim estratti As Integer = 0
         Dim sovrascritti As Integer = 0
         Dim sbDoppi As New System.Text.StringBuilder()
+        Dim rinominati As Integer = 0
+        Dim sbRinominati As New System.Text.StringBuilder()
 
         For i As Integer = 0 To fileZip.Length - 1
             Dim pathZip As String = fileZip(i)
@@ -203,16 +210,45 @@ Module ModuloImportFattureXml
             progress?.Report(String.Format("Archivio {0}/{1}: {2}...", i + 1, fileZip.Length, nomeZip))
 
             Using archivio As ZipArchive = ZipFile.OpenRead(pathZip)
-                For Each entry As ZipArchiveEntry In archivio.Entries
-                    If String.IsNullOrEmpty(entry.Name) Then Continue For
-                    Dim destPath As String = IO.Path.Combine(cartellaDecompressi, entry.Name)
-                    If IO.File.Exists(destPath) Then
-                        sovrascritti += 1
-                        sbDoppi.AppendLine(entry.Name)
-                        IO.File.Delete(destPath)
+                ' Fattura e metadato condividono la radice del nome (es. IT02663950984_BDIuL.xml.p7m e
+                ' IT02663950984_BDIuL.xml.p7m_metadato.xml): vanno rinominati insieme per restare abbinati.
+                Dim gruppi = archivio.Entries.
+                    Where(Function(en) Not String.IsNullOrEmpty(en.Name)).
+                    GroupBy(Function(en) RadiceNomeFile(en.Name), StringComparer.OrdinalIgnoreCase)
+
+                For Each gruppo In gruppi
+                    Dim radice As String = gruppo.Key
+
+                    ' Lo SDI può assegnare lo stesso nome a fatture diverse dello stesso fornitore:
+                    ' se il nome è già in uso per un contenuto diverso, si estrae con una radice
+                    ' univoca invece di sovrascrivere (e perdere) la fattura precedente.
+                    Dim conflitto As Boolean = RadiceGiaUsata(radice, cartelleStorico) OrElse
+                        gruppo.Any(Function(en)
+                                       Dim esistente = IO.Path.Combine(cartellaDecompressi, en.Name)
+                                       Return IO.File.Exists(esistente) AndAlso Not StessoContenuto(en, esistente)
+                                   End Function)
+
+                    Dim nuovaRadice As String = radice
+                    If conflitto Then
+                        Dim n As Integer = 2
+                        While RadiceGiaUsata(radice & "_" & n, cartelleTutte)
+                            n += 1
+                        End While
+                        nuovaRadice = radice & "_" & n
+                        rinominati += 1
+                        sbRinominati.AppendLine(radice & " → " & nuovaRadice)
                     End If
-                    entry.ExtractToFile(destPath)
-                    estratti += 1
+
+                    For Each entry As ZipArchiveEntry In gruppo
+                        Dim destPath As String = IO.Path.Combine(cartellaDecompressi, nuovaRadice & entry.Name.Substring(radice.Length))
+                        If IO.File.Exists(destPath) Then
+                            sovrascritti += 1
+                            sbDoppi.AppendLine(entry.Name)
+                            IO.File.Delete(destPath)
+                        End If
+                        entry.ExtractToFile(destPath)
+                        estratti += 1
+                    Next
                 Next
             End Using
             IO.File.Delete(pathZip)
@@ -222,9 +258,43 @@ Module ModuloImportFattureXml
         Dim fileUnici As Integer = estratti - sovrascritti
         Dim msg As String = String.Format("Decompressione ZIP completata: {0} file estratti da {1} archivio/i.", fileUnici, fileZip.Length)
         If sovrascritti > 0 Then
-            msg &= String.Format("{0}{0}Attenzione: {1} file presenti in più archivi (ultima versione mantenuta):{0}{2}", vbCrLf, sovrascritti, sbDoppi.ToString())
+            msg &= String.Format("{0}{0}Attenzione: {1} file identici presenti in più archivi (mantenuta una sola copia):{0}{2}", vbCrLf, sovrascritti, sbDoppi.ToString())
+        End If
+        If rinominati > 0 Then
+            msg &= String.Format("{0}{0}Attenzione: {1} fatture con nome già in uso, estratte con un nome univoco:{0}{2}", vbCrLf, rinominati, sbRinominati.ToString())
         End If
         Return msg
+    End Function
+
+    ''' <summary>
+    ''' Radice del nome file, cioè la parte prima del primo punto (es. "IT02663950984_BDIuL" per
+    ''' "IT02663950984_BDIuL.xml.p7m" e per il relativo "IT02663950984_BDIuL.xml.p7m_metadato.xml").
+    ''' </summary>
+    Private Function RadiceNomeFile(nomeFile As String) As String
+        Dim idx As Integer = nomeFile.IndexOf("."c)
+        Return If(idx < 0, nomeFile, nomeFile.Substring(0, idx))
+    End Function
+
+    ''' <summary>
+    ''' Indica se in almeno una delle cartelle esiste già un file con la radice indicata
+    ''' (fattura o metadato, in qualunque fase di lavorazione).
+    ''' </summary>
+    Private Function RadiceGiaUsata(radice As String, cartelle As String()) As Boolean
+        For Each cartella In cartelle
+            If String.IsNullOrEmpty(cartella) OrElse Not IO.Directory.Exists(cartella) Then Continue For
+            If IO.Directory.GetFiles(cartella, radice & ".*").Length > 0 Then Return True
+        Next
+        Return False
+    End Function
+
+    Private Function StessoContenuto(entry As ZipArchiveEntry, pathFile As String) As Boolean
+        If entry.Length <> New IO.FileInfo(pathFile).Length Then Return False
+        Using ms As New IO.MemoryStream()
+            Using s = entry.Open()
+                s.CopyTo(ms)
+            End Using
+            Return ms.ToArray().SequenceEqual(IO.File.ReadAllBytes(pathFile))
+        End Using
     End Function
 
     ''' <summary>
