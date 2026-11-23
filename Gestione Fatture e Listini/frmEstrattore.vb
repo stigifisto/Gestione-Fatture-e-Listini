@@ -1,3 +1,4 @@
+Imports System.Data.SqlClient
 Imports System.Diagnostics
 Imports IBM.Data.DB2.iSeries
 Imports OfficeOpenXml
@@ -483,9 +484,20 @@ Public Class FrmEstrattore
                     cmdChk.Parameters.AddWithValue("@LIATIP", cmbLiafor.Text)
                     Dim contEsistenti As Integer = Convert.ToInt32(cmdChk.ExecuteScalar())
                     If contEsistenti > 0 Then
-                        MessageBox.Show(
-                            $"Il listino {cmbLiafor.Text} con data {liadai.ToShortDateString()} risulta già importato. Operazione annullata.",
-                            "Listino già presente", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        If HaPromozioniAia(dtRisultato) Then
+                            ' Il listino è già su AS400, ma le promo (salvate a parte) si possono
+                            ' ancora caricare: l'operazione non crea duplicati.
+                            If MessageBox.Show(
+                                $"Il listino {cmbLiafor.Text} con data {liadai.ToShortDateString()} risulta già importato su AS400." & vbCrLf & vbCrLf &
+                                "Vuoi caricare solo le promozioni presenti nel listino?",
+                                "Listino già presente", MessageBoxButtons.YesNo, MessageBoxIcon.Question) = DialogResult.Yes Then
+                                MessageBox.Show(SalvaPromozioniAia(dtRisultato, liafor, lialis, liadai))
+                            End If
+                        Else
+                            MessageBox.Show(
+                                $"Il listino {cmbLiafor.Text} con data {liadai.ToShortDateString()} risulta già importato. Operazione annullata.",
+                                "Listino già presente", MessageBoxButtons.OK, MessageBoxIcon.Warning)
+                        End If
                         Me.Cursor = Cursors.Default
                         cmdAs400.Enabled = True
                         ImpostaStato("Pronto.")
@@ -585,6 +597,10 @@ Public Class FrmEstrattore
             If erroriMsg.Length > 0 Then
                 msg &= vbCrLf & vbCrLf & "Primi errori:" & vbCrLf & erroriMsg.ToString()
             End If
+            If HaPromozioniAia(dtRisultato) Then
+                ImpostaStato("Salvataggio promozioni...")
+                msg &= vbCrLf & vbCrLf & SalvaPromozioniAia(dtRisultato, liafor, lialis, liadai)
+            End If
             MessageBox.Show(msg)
 
             ' Registra l'importazione in LISDATINI
@@ -617,6 +633,102 @@ Public Class FrmEstrattore
             ImpostaStato("Pronto.")
         End Try
     End Sub
+
+    ' -----------------------------------------------------------------------
+    ' Promozioni AIA
+    ' -----------------------------------------------------------------------
+
+    ' Nei listini AIA il prezzo caricato su AS400 è il "Listino Nuovo" (colonna Netto); le
+    ' promozioni hanno un proprio periodo (data bolla dal/al), che può iniziare prima della
+    ' data di validità del listino, e vengono quindi salvate a parte in Promozioni_Acquisto_Aia.
+    Private Function HaPromozioniAia(dt As DataTable) As Boolean
+        Return cmbLiafor.Text.StartsWith("Aia", StringComparison.OrdinalIgnoreCase) AndAlso
+               dt.Columns.Contains("PromoPrezzo") AndAlso dt.Columns.Contains("PromoDal") AndAlso dt.Columns.Contains("PromoAl")
+    End Function
+
+    ' La stessa promo compare in più listini settimanali consecutivi: la chiave è fornitore +
+    ' listino + articolo + periodo, quindi una promo già presente viene solo aggiornata se cambia
+    ' il prezzo (DataListino indica il listino da cui proviene il prezzo in vigore).
+    Private Function SalvaPromozioniAia(dt As DataTable, liafor As String, lialis As String, dataListino As Date) As String
+        Dim sql As String = "
+            MERGE dbo.Promozioni_Acquisto_Aia AS t
+            USING (SELECT @for AS CodiceFornitore, @vp AS ValidoPer, @cod AS CodiceArticolo,
+                          @dal AS DataInizioValidita, @al AS DataFineValidita) AS s
+            ON t.CodiceFornitore = s.CodiceFornitore AND t.ValidoPer = s.ValidoPer AND t.CodiceArticolo = s.CodiceArticolo
+               AND t.DataInizioValidita = s.DataInizioValidita AND t.DataFineValidita = s.DataFineValidita
+            WHEN MATCHED AND t.PrezzoPromo <> @prezzo THEN
+                UPDATE SET PrezzoPromo = @prezzo, DataListino = @datalis, TipoListino = @tipo,
+                           CodiceArticoloFornitore = @codfor, DescrizioneArticolo = @desc, UM = @um,
+                           DataAggiornamento = GETDATE()
+            WHEN NOT MATCHED THEN
+                INSERT (CodiceFornitore, ValidoPer, CodiceArticolo, CodiceArticoloFornitore, DescrizioneArticolo, UM,
+                        PrezzoPromo, DataInizioValidita, DataFineValidita, DataListino, TipoListino)
+                VALUES (@for, @vp, @cod, @codfor, @desc, @um, @prezzo, @dal, @al, @datalis, @tipo)
+            OUTPUT $action;"
+
+        Dim inserite As Integer = 0, aggiornate As Integer = 0, invariate As Integer = 0
+        Dim senzaCodice As Integer = 0, nonValide As Integer = 0
+
+        Try
+            Using conn As New SqlConnection(ModuloImportListiniInfinity.connectionString)
+                conn.Open()
+                Using tran As SqlTransaction = conn.BeginTransaction()
+                    For Each row As DataRow In dt.Rows
+                        Dim prezzoStr As String = If(row("PromoPrezzo") Is DBNull.Value, "", row("PromoPrezzo").ToString().Trim().Replace(",", "."))
+                        If String.IsNullOrEmpty(prezzoStr) Then Continue For
+
+                        Dim cod As String = If(row("COD_AS400") Is DBNull.Value, "", row("COD_AS400").ToString().Trim())
+                        If String.IsNullOrEmpty(cod) Then
+                            senzaCodice += 1
+                            Continue For
+                        End If
+
+                        Dim prezzo As Decimal, dal As Date, al As Date
+                        If Not Decimal.TryParse(prezzoStr, Globalization.NumberStyles.Number, Globalization.CultureInfo.InvariantCulture, prezzo) OrElse prezzo <= 0 OrElse
+                           Not Date.TryParseExact(row("PromoDal").ToString().Trim(), "dd/MM/yyyy", Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.None, dal) OrElse
+                           Not Date.TryParseExact(row("PromoAl").ToString().Trim(), "dd/MM/yyyy", Globalization.CultureInfo.InvariantCulture, Globalization.DateTimeStyles.None, al) OrElse
+                           al < dal Then
+                            nonValide += 1
+                            Continue For
+                        End If
+
+                        Dim uma As String = If(row("UM_AS400") Is DBNull.Value, "", row("UM_AS400").ToString().Trim())
+                        If String.IsNullOrEmpty(uma) AndAlso dt.Columns.Contains("UM") Then uma = row("UM").ToString().Trim()
+
+                        Using cmd As New SqlCommand(sql, conn, tran)
+                            cmd.Parameters.AddWithValue("@for", liafor)
+                            cmd.Parameters.AddWithValue("@vp", lialis & "EUR")
+                            cmd.Parameters.AddWithValue("@cod", cod)
+                            cmd.Parameters.AddWithValue("@codfor", row("Codice").ToString().Trim())
+                            cmd.Parameters.AddWithValue("@desc", If(row("DESCRIZIONE_AS400") Is DBNull.Value, "", row("DESCRIZIONE_AS400").ToString().Trim()))
+                            cmd.Parameters.AddWithValue("@um", uma)
+                            cmd.Parameters.AddWithValue("@prezzo", prezzo)
+                            cmd.Parameters.AddWithValue("@dal", dal)
+                            cmd.Parameters.AddWithValue("@al", al)
+                            cmd.Parameters.AddWithValue("@datalis", dataListino)
+                            cmd.Parameters.AddWithValue("@tipo", cmbLiafor.Text)
+                            Select Case Convert.ToString(cmd.ExecuteScalar())
+                                Case "INSERT" : inserite += 1
+                                Case "UPDATE" : aggiornate += 1
+                                Case Else : invariate += 1
+                            End Select
+                        End Using
+                    Next
+                    tran.Commit()
+                End Using
+            End Using
+        Catch ex As Exception
+            Return "Errore nel salvataggio delle promozioni (nessuna promozione salvata): " & ex.Message
+        End Try
+
+        Dim msg As String = $"Promozioni AIA:{vbCrLf}" &
+                            $"  Nuove:      {inserite}{vbCrLf}" &
+                            $"  Aggiornate: {aggiornate}{vbCrLf}" &
+                            $"  Già presenti: {invariate}"
+        If senzaCodice > 0 Then msg &= $"{vbCrLf}  Saltate (cod. AS400 mancante): {senzaCodice}"
+        If nonValide > 0 Then msg &= $"{vbCrLf}  Saltate (prezzo o date non validi): {nonValide}"
+        Return msg
+    End Function
 
     ' -----------------------------------------------------------------------
     ' Estrazione data di validità dal PDF tramite estrai_data_listino.exe

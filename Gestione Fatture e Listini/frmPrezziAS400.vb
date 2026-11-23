@@ -229,10 +229,26 @@ Public Class frmPrezziAS400
     ''' FornitoriListini (per fornitore + centro di costo); se non c'è una corrispondenza
     ''' specifica, oppure per quel ValidoPer non esiste un listino applicabile, si ripiega
     ''' sul ValidoPer '01EUR'.
+    ''' Con il listino AS400, se la data bolla cade nel periodo di una promozione dello stesso
+    ''' listino (Promozioni_Acquisto_Aia, caricate dai listini PDF AIA) il confronto si fa con il
+    ''' prezzo promo invece che con il prezzo di listino.
     ''' </summary>
     Public Function GetAnomaliePrezziAS400(codiceFornitore As String, dal As Date, al As Date, usaListinoInfinity As Boolean) As DataTable
         Dim tabellaListino As String = If(usaListinoInfinity, "Listini_Acquisto_Infinity", "Listini_Acquisto_As400")
         Dim colonnaArticoloListino As String = If(usaListinoInfinity, "CodiceArticoloAs400", "CodiceArticolo")
+
+        Dim sqlPromo As String = If(usaListinoInfinity,
+            "OUTER APPLY (SELECT CAST(NULL AS decimal(18,5)) AS PrezzoPromo, CAST(NULL AS date) AS DataInizioValidita, CAST(NULL AS date) AS DataFineValidita) pr",
+            "OUTER APPLY (
+                -- Se più promo coprono la stessa data bolla vince quella iniziata più di recente.
+                SELECT TOP 1 p.PrezzoPromo, p.DataInizioValidita, p.DataFineValidita
+                FROM Promozioni_Acquisto_Aia p
+                WHERE p.CodiceFornitore = f.MOAFOR
+                  AND LTRIM(RTRIM(p.CodiceArticolo)) = LTRIM(RTRIM(f.MOACOD))
+                  AND p.ValidoPer = lst.ValidoPer
+                  AND f.MOADBO BETWEEN p.DataInizioValidita AND p.DataFineValidita
+                ORDER BY p.DataInizioValidita DESC
+            ) pr")
 
         Dim sql As String = "
             SELECT
@@ -248,16 +264,21 @@ Public Class frmPrezziAS400
                 f.MOAQTA AS Quantita,
                 f.MOAPRZ AS PrezzoFatturato,
                 lst.ValidoPer AS ValidoPerUtilizzato,
-                lst.PrezzoNettoCalcolato AS Unitario_Netto_Listino,
-                (f.MOAPRZ - lst.PrezzoNettoCalcolato) AS Differenza_Unitaria,
-                ((f.MOAPRZ - lst.PrezzoNettoCalcolato) * f.MOAQTA) AS Differenza_Totale_Riga,
+                lst.PrezzoNettoCalcolato AS Prezzo_Listino,
+                pr.PrezzoPromo AS Prezzo_Promo,
+                CASE WHEN pr.PrezzoPromo IS NOT NULL
+                     THEN CONVERT(varchar(10), pr.DataInizioValidita, 103) + ' - ' + CONVERT(varchar(10), pr.DataFineValidita, 103)
+                END AS Periodo_Promo,
+                px.Prezzo AS Unitario_Netto_Listino,
+                (f.MOAPRZ - px.Prezzo) AS Differenza_Unitaria,
+                ((f.MOAPRZ - px.Prezzo) * f.MOAQTA) AS Differenza_Totale_Riga,
                 CASE
                     -- Righe puramente descrittive (es. riferimento DDT), senza un vero codice
                     -- articolo: non hanno un listino da confrontare, quindi non sono un'anomalia.
-                    WHEN lst.PrezzoNettoCalcolato IS NULL AND (LTRIM(RTRIM(ISNULL(f.MOACOD, ''))) = '' OR LTRIM(RTRIM(f.MOACOD)) = '0') THEN 'In Bolla'
-                    WHEN lst.PrezzoNettoCalcolato IS NULL THEN 'Mancante a Listino'
-                    WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) > @scostamento THEN 'Prezzo Eccessivo'
-                    WHEN (f.MOAPRZ - lst.PrezzoNettoCalcolato) < 0 THEN 'Prezzo Inferiore'
+                    WHEN px.Prezzo IS NULL AND (LTRIM(RTRIM(ISNULL(f.MOACOD, ''))) = '' OR LTRIM(RTRIM(f.MOACOD)) = '0') THEN 'In Bolla'
+                    WHEN px.Prezzo IS NULL THEN 'Mancante a Listino'
+                    WHEN (f.MOAPRZ - px.Prezzo) > @scostamento THEN 'Prezzo Eccessivo'
+                    WHEN (f.MOAPRZ - px.Prezzo) < 0 THEN 'Prezzo Inferiore'
                     ELSE 'In Bolla'
                 END AS Stato_Anomalia
             FROM Fatture_AS400 f
@@ -279,6 +300,8 @@ Public Class frmPrezziAS400
                 -- restino periodi di validità sovrapposti.
                 ORDER BY CASE WHEN l.ValidoPer = vp.VALIDOPER THEN 0 ELSE 1 END, l.DataInizioValidita DESC
             ) lst
+            " & sqlPromo & "
+            CROSS APPLY (SELECT COALESCE(pr.PrezzoPromo, lst.PrezzoNettoCalcolato) AS Prezzo) px
             WHERE f.MOAFOR = @fornitore
               AND f.MOADBO BETWEEN @dal AND @al
             ORDER BY f.MOADBO, f.MOANBO"
