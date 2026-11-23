@@ -746,24 +746,27 @@ Module ModuloImportFattureXml
     ''' numero e data documento), usata per il controllo duplicati basato sul contenuto.
     ''' </summary>
     ''' <summary>
-    ''' Restituisce il CodiceValore dell'articolo di una riga. Se la riga ha più nodi CodiceArticolo
-    ''' si ignora quello di tipo EAN (codice a barre) e si usa il primo degli altri; se il nodo è
-    ''' unico, se ne usa il valore indipendentemente dal tipo.
+    ''' Restituisce il CodiceValore dell'articolo di una riga. I nodi di tipo lotto non sono mai un
+    ''' codice articolo (cambiano a ogni consegna) e vengono scartati; tra i restanti si preferisce il
+    ''' primo non EAN (codice a barre) e si ripiega sull'EAN solo se non c'è altro. CodiceTipo è testo
+    ''' libero: ogni fornitore usa la sua sigla (es. "EAN", "EN", "EAN13", "GTIN").
     ''' </summary>
     Private Function EstraiCodiceArticolo(riga As XElement) As String
-        Dim nodiArticolo As List(Of XElement) = riga.Elements().Where(Function(x) x.Name.LocalName = "CodiceArticolo").ToList()
+        Dim nodiArticolo As List(Of XElement) = riga.Elements().
+            Where(Function(x) x.Name.LocalName = "CodiceArticolo" AndAlso Not TipiCodiceLotto.Contains(TipoCodice(x))).
+            ToList()
 
-        If nodiArticolo.Count = 1 Then
-            Return ValoreFiglio(nodiArticolo(0), "CodiceValore")
-        End If
+        Dim nodoScelto As XElement =
+            If(nodiArticolo.FirstOrDefault(Function(n) Not TipiCodiceEan.Contains(TipoCodice(n))), nodiArticolo.FirstOrDefault())
 
-        For Each nodo In nodiArticolo
-            If ValoreFiglio(nodo, "CodiceTipo") <> "EAN" Then
-                Return ValoreFiglio(nodo, "CodiceValore")
-            End If
-        Next
+        Return If(nodoScelto Is Nothing, Nothing, ValoreFiglio(nodoScelto, "CodiceValore"))
+    End Function
 
-        Return Nothing
+    Private ReadOnly TipiCodiceEan As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {"EAN", "EN", "EAN13", "EAN-13", "EAN8", "EAN-8", "GTIN"}
+    Private ReadOnly TipiCodiceLotto As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase) From {"LOTTO", "LOTTI", "LOT"}
+
+    Private Function TipoCodice(nodo As XElement) As String
+        Return If(ValoreFiglio(nodo, "CodiceTipo"), "")
     End Function
 
     Private Function ValoreFiglio(nodo As XElement, nomeFiglio As String) As String
