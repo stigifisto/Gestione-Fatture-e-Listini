@@ -668,6 +668,7 @@ Public Class FrmEstrattore
 
         Dim inserite As Integer = 0, aggiornate As Integer = 0, invariate As Integer = 0
         Dim senzaCodice As Integer = 0, nonValide As Integer = 0
+        Dim promoValide As New List(Of PromoAia)()
 
         Try
             Using conn As New SqlConnection(ModuloImportListiniInfinity.connectionString)
@@ -713,6 +714,7 @@ Public Class FrmEstrattore
                                 Case Else : invariate += 1
                             End Select
                         End Using
+                        promoValide.Add(New PromoAia With {.Codice = cod, .Uma = uma, .Prezzo = prezzo, .Dal = dal, .Al = al})
                     Next
                     tran.Commit()
                 End Using
@@ -727,8 +729,112 @@ Public Class FrmEstrattore
                             $"  Già presenti: {invariate}"
         If senzaCodice > 0 Then msg &= $"{vbCrLf}  Saltate (cod. AS400 mancante): {senzaCodice}"
         If nonValide > 0 Then msg &= $"{vbCrLf}  Saltate (prezzo o date non validi): {nonValide}"
+        If promoValide.Count > 0 Then
+            ImpostaStato("Caricamento promozioni su AS400...")
+            msg &= vbCrLf & vbCrLf & SalvaPromozioniAiaSuAs400(promoValide, liafor, lialis)
+        End If
         Return msg
     End Function
+
+    Private Class PromoAia
+        Public Property Codice As String
+        Public Property Uma As String
+        Public Property Prezzo As Decimal
+        Public Property Dal As Date
+        Public Property Al As Date
+    End Class
+
+    ' Le promo del listino vanno anche su AS400 (OALIA£2L) in un listino dedicato, P + numero del
+    ' listino di provenienza (01 -> P1, 03 -> P3...), con il loro periodo reale LIADAI-LIADAF.
+    ' La riga è identificata da fornitore + listino + articolo + UM + data inizio: una promo già
+    ' caricata da un listino precedente viene aggiornata solo se cambiano prezzo o data fine
+    ' (es. promo prolungata), così da non creare duplicati.
+    Private Function SalvaPromozioniAiaSuAs400(promo As List(Of PromoAia), liafor As String, lialis As String) As String
+        Dim lialisPromo As String = "P" & CInt(lialis).ToString()
+        Dim connStr As String = "DataSource=192.168.2.200;UserID=edpuser;Password=edpuser;DefaultCollection=inadati"
+
+        Dim sqlCerca As String =
+            "SELECT LIAPRZ, LIADAF FROM PJVARGRD.OALIA£2L" &
+            " WHERE LIASOC = 'GRD' AND LIALIS = @LIALIS AND LIAVAL = 'EUR ' AND LIAFOR = @LIAFOR AND LIAFIL = 0" &
+            " AND LIACOD = @LIACOD AND LIAUMA = @LIAUMA AND LIADAI = @LIADAI"
+        Dim sqlAggiorna As String =
+            "UPDATE PJVARGRD.OALIA£2L SET LIAPRZ = @LIAPRZ, LIADAF = @LIADAF" &
+            " WHERE LIASOC = 'GRD' AND LIALIS = @LIALIS AND LIAVAL = 'EUR ' AND LIAFOR = @LIAFOR AND LIAFIL = 0" &
+            " AND LIACOD = @LIACOD AND LIAUMA = @LIAUMA AND LIADAI = @LIADAI"
+        Dim sqlInserisci As String =
+            "INSERT INTO PJVARGRD.OALIA£2L " &
+            "(LIASOC, LIAUNT, LIALIS, LIAVAL, LIAFOR, LIACLV, LIACOD, LIAUMA, LIAPRZ, " &
+            " LIASC1, LIASC2, LIASC3, LIASC4, LIASCQ, LIADAI, LIADAF, LIAFIL, LIAMAG) " &
+            "VALUES ('GRD', '', @LIALIS, 'EUR ', @LIAFOR, '', @LIACOD, @LIAUMA, @LIAPRZ, " &
+            "        0, 0, 0, 0, 0, @LIADAI, @LIADAF, 0, '')"
+
+        Dim inserite As Integer = 0, aggiornate As Integer = 0, invariate As Integer = 0
+
+        Try
+            Using conn As New iDB2Connection(connStr)
+                conn.Open()
+                Using tran As iDB2Transaction = conn.BeginTransaction()
+                    For Each p In promo
+                        Dim prezzoEsistente As Decimal? = Nothing
+                        Dim fineEsistente As Date = Date.MinValue
+                        Using cmd As New iDB2Command(sqlCerca, conn)
+                            cmd.Transaction = tran
+                            AggiungiChiavePromoAs400(cmd, lialisPromo, liafor, p)
+                            Using reader = cmd.ExecuteReader()
+                                If reader.Read() Then
+                                    prezzoEsistente = Convert.ToDecimal(reader("LIAPRZ"))
+                                    fineEsistente = Convert.ToDateTime(reader("LIADAF")).Date
+                                End If
+                            End Using
+                        End Using
+
+                        Dim prezzoAs400 As Decimal = Math.Round(p.Prezzo, 4)
+                        If prezzoEsistente.HasValue AndAlso prezzoEsistente.Value = prezzoAs400 AndAlso fineEsistente = p.Al Then
+                            invariate += 1
+                            Continue For
+                        End If
+
+                        Using cmd As New iDB2Command(If(prezzoEsistente.HasValue, sqlAggiorna, sqlInserisci), conn)
+                            cmd.Transaction = tran
+                            ' Parametri nell'ordine in cui compaiono nel testo SQL
+                            If prezzoEsistente.HasValue Then
+                                cmd.Parameters.AddWithValue("@LIAPRZ", prezzoAs400)
+                                cmd.Parameters.AddWithValue("@LIADAF", p.Al.ToString("yyyy-MM-dd"))
+                                AggiungiChiavePromoAs400(cmd, lialisPromo, liafor, p)
+                            Else
+                                cmd.Parameters.AddWithValue("@LIALIS", lialisPromo)
+                                cmd.Parameters.AddWithValue("@LIAFOR", liafor)
+                                cmd.Parameters.AddWithValue("@LIACOD", p.Codice)
+                                cmd.Parameters.AddWithValue("@LIAUMA", p.Uma)
+                                cmd.Parameters.AddWithValue("@LIAPRZ", prezzoAs400)
+                                cmd.Parameters.AddWithValue("@LIADAI", p.Dal.ToString("yyyy-MM-dd"))
+                                cmd.Parameters.AddWithValue("@LIADAF", p.Al.ToString("yyyy-MM-dd"))
+                            End If
+                            cmd.ExecuteNonQuery()
+                        End Using
+                        If prezzoEsistente.HasValue Then aggiornate += 1 Else inserite += 1
+                    Next
+                    tran.Commit()
+                End Using
+            End Using
+        Catch ex As Exception
+            Return $"Promozioni su AS400 (listino {lialisPromo}): errore, nessuna promozione caricata su AS400: {ex.Message}" & vbCrLf &
+                   "Le promozioni sono comunque salvate in SQL Server: si possono ricaricare su AS400 rilanciando il caricamento (opzione ""solo promozioni"")."
+        End Try
+
+        Return $"Promozioni su AS400 (listino {lialisPromo}):{vbCrLf}" &
+               $"  Nuove:      {inserite}{vbCrLf}" &
+               $"  Aggiornate: {aggiornate}{vbCrLf}" &
+               $"  Già presenti: {invariate}"
+    End Function
+
+    Private Sub AggiungiChiavePromoAs400(cmd As iDB2Command, lialisPromo As String, liafor As String, p As PromoAia)
+        cmd.Parameters.AddWithValue("@LIALIS", lialisPromo)
+        cmd.Parameters.AddWithValue("@LIAFOR", liafor)
+        cmd.Parameters.AddWithValue("@LIACOD", p.Codice)
+        cmd.Parameters.AddWithValue("@LIAUMA", p.Uma)
+        cmd.Parameters.AddWithValue("@LIADAI", p.Dal.ToString("yyyy-MM-dd"))
+    End Sub
 
     ' -----------------------------------------------------------------------
     ' Estrazione data di validità dal PDF tramite estrai_data_listino.exe
