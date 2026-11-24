@@ -856,6 +856,9 @@ Module ModuloImportFattureXml
                 '   → rimuove _metadato: 17244482732_sm03473_ge62i.p7m
                 '   → rimuove .p7m:     17244482732_sm03473_ge62i
                 '   → aggiunge .xml:    17244482732_sm03473_ge62i.xml
+                ' Se la fattura era "<nome>.xml.p7m" il metadato è "<nome>.xml.p7m_metadato.xml":
+                ' tolto .p7m il nome finisce già in .xml e non va aggiunto di nuovo, altrimenti
+                ' NomeFile ("<nome>.xml.xml") non corrisponde a quello di Fatture_Testate.
                 Dim nomefile As String = IO.Path.GetFileNameWithoutExtension(pathMetadato)
                 If nomefile.ToLower().EndsWith("_metadato") Then
                     nomefile = nomefile.Substring(0, nomefile.Length - 9)
@@ -863,7 +866,9 @@ Module ModuloImportFattureXml
                 If nomefile.ToLower().EndsWith(".p7m") Then
                     nomefile = nomefile.Substring(0, nomefile.Length - 4)
                 End If
-                nomefile &= ".xml"
+                If Not nomefile.ToLower().EndsWith(".xml") Then
+                    nomefile &= ".xml"
+                End If
 
                 nomefileUsato = nomefile
 
